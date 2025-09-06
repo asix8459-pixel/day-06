@@ -40,10 +40,15 @@ function send_email(string $to, string $subject, string $htmlBody, ?string $text
 // Branding and ICS helpers
 if (!defined('APP_EMAIL_FROM')) { define('APP_EMAIL_FROM', smtp_get('SMTP_FROM', 'no-reply@yourdomain.com')); }
 if (!defined('APP_BASE_URL')) {
-    // Attempt to infer base URL; fallback to relative
+    // Attempt to infer base URL including subdirectory (e.g., /student_services_system2/)
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'] ?? '';
-    define('APP_BASE_URL', ($host ? ($scheme.'://'.$host.'/') : '/'));
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    $dir = str_replace('\\','/', dirname($script));
+    $basePath = rtrim($dir, '/');
+    $basePath = ($basePath === '') ? '/' : ($basePath.'/');
+    $baseUrl = $host ? ($scheme.'://'.$host.$basePath) : $basePath;
+    define('APP_BASE_URL', $baseUrl);
 }
 if (!defined('APP_ICS_SECRET')) { define('APP_ICS_SECRET', 'change_this_secret_key'); }
 
