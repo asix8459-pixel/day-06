@@ -174,6 +174,11 @@ try {
         <a href="announcements_slideshow.php" class="menu-item" id="announcements">
             <i class="bi bi-megaphone"></i> Announcements
         </a>
+        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'Guidance Admin'): ?>
+        <a href="smtp_test.php" class="menu-item" id="smtp-test">
+            <i class="bi bi-envelope"></i> SMTP Test
+        </a>
+        <?php endif; ?>
     </div>
     <a href="login.php" class="logout-btn">
         <i class="bi bi-box-arrow-right"></i> Logout
