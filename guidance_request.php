@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 session_start();
+require_once 'mailer.php';
 // CSRF token
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -51,6 +52,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt->bind_param("ssss", $student_id, $guidance_admin_id, $appointment_date, $reason);
                 if ($stmt->execute()) {
                     $success_message = "Guidance request submitted successfully.";
+                    // Notify student confirmation
+                    $me = $conn->prepare("SELECT email, TRIM(CONCAT(first_name,' ',last_name)) AS name FROM users WHERE user_id=?");
+                    $me->bind_param('s', $student_id);
+                    $me->execute(); $meRes = $me->get_result()->fetch_assoc();
+                    if ($meRes && !empty($meRes['email'])) {
+                        $html = '<p>Hello '.htmlspecialchars($meRes['name'] ?? $student_id).',</p><p>Your guidance request has been received and is currently pending. You will be notified once a counselor schedules your appointment.</p>';
+                        @send_email($meRes['email'], 'Request Received', $html, strip_tags($html));
+                    }
                 } else {
                     $error_message = "Submission failed. Please try again later.";
                 }

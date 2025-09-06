@@ -1,6 +1,7 @@
 <?php
 include 'config.php'; 
 session_start();
+require_once 'mailer.php';
 
 // Require role
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['Guidance Admin','Counselor'], true)) {
@@ -39,8 +40,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
         $updateQuery = "UPDATE appointments SET status = ?, admin_message = ? WHERE id = ?";
         $stmt = $conn->prepare($updateQuery);
         $stmt->bind_param("ssi", $status_lower, $admin_message, $request_id);
+        $notify = true;
 
         if ($stmt->execute()) {
+            // Notify student about status change
+            $stu = $conn->prepare("SELECT u.email, TRIM(CONCAT(u.first_name,' ',u.last_name)) AS name FROM appointments a JOIN users u ON a.student_id=u.user_id WHERE a.id=?");
+            $stu->bind_param('i', $request_id);
+            $stu->execute(); $s = $stu->get_result()->fetch_assoc();
+            if ($s && !empty($s['email'])) {
+                $html = '<p>Hello '.htmlspecialchars($s['name']).',</p><p>Your guidance request status has been updated to <strong>'.htmlspecialchars(ucfirst($status_lower)).'</strong>.</p>'.($admin_message?('<p>Message: '.htmlspecialchars($admin_message).'</p>'):'');
+                @send_email($s['email'], 'Guidance Request Updated', $html, strip_tags($html));
+            }
             header("Location: guidance_list_admin.php?success=" . urlencode('Guidance request updated successfully'));
             exit();
         } else {

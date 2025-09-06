@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 include 'csrf.php';
+require_once 'mailer.php';
 session_start();
 
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
@@ -15,6 +16,17 @@ if ($request_id <= 0) { header('Location: student_status_appointments.php?error=
 $stmt = $conn->prepare("UPDATE appointments SET status='cancelled' WHERE id=? AND student_id=? AND status IN ('pending','approved','Pending','Approved')");
 $stmt->bind_param('is', $request_id, $student_id);
 $ok = $stmt->execute() && $stmt->affected_rows > 0;
+
+if ($ok) {
+    // Notify counselor about cancellation
+    $c = $conn->prepare("SELECT u.email, TRIM(CONCAT(u.first_name,' ',u.last_name)) AS name FROM appointments a JOIN users u ON a.user_id=u.user_id WHERE a.id=? AND a.student_id=?");
+    $c->bind_param('is', $request_id, $student_id);
+    $c->execute(); $cr = $c->get_result()->fetch_assoc();
+    if ($cr && !empty($cr['email'])) {
+        $html = '<p>Hello '.htmlspecialchars($cr['name']).',</p><p>A student has cancelled their guidance appointment (ID #'.htmlspecialchars((string)$request_id).').</p>';
+        @send_email($cr['email'], 'Appointment Cancelled', $html, strip_tags($html));
+    }
+}
 
 $msg = $ok ? 'Appointment cancelled.' : 'Unable to cancel appointment.';
 header('Location: student_status_appointments.php?success=' . urlencode($msg));

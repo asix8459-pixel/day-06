@@ -4,6 +4,7 @@ session_start();
 header('Content-Type: application/json; charset=utf-8');
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['Guidance Admin','Counselor'], true)) { http_response_code(403); echo json_encode(['success'=>false,'message'=>'Unauthorized']); exit; }
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) { http_response_code(403); echo json_encode(['success'=>false,'message'=>'Invalid CSRF token']); exit; }
+require_once 'mailer.php';
 
 $student_id = $_POST['student_id'] ?? '';
 $counselor_id = $_POST['counselor_id'] ?? '';
@@ -24,4 +25,15 @@ if ($c > 0) { echo json_encode(['success'=>false,'message'=>'Counselor slot is a
 $stmt=$conn->prepare("INSERT INTO appointments (student_id, user_id, appointment_date, reason, status) VALUES (?, ?, ?, ?, 'approved')");
 $stmt->bind_param('ssss', $student_id, $counselor_id, $startStr, $reason);
 $ok=$stmt->execute();
+if ($ok) {
+  // Notify student
+  $stu = $conn->prepare("SELECT email, TRIM(CONCAT(first_name,' ',last_name)) AS name FROM users WHERE user_id=?");
+  $stu->bind_param('s', $student_id);
+  $stu->execute(); $stuRes = $stu->get_result()->fetch_assoc();
+  $email = $stuRes['email'] ?? '';
+  if ($email) {
+    $html = '<p>Hello '.htmlspecialchars($stuRes['name'] ?? $student_id).',</p><p>Your guidance appointment has been created and approved.</p><p><strong>Date & Time:</strong> '.htmlspecialchars($startStr).'</p><p>If you need to reschedule, please coordinate with your counselor.</p>';
+    @send_email($email, 'Appointment Confirmed', $html, strip_tags($html));
+  }
+}
 echo json_encode(['success'=>$ok, 'message'=>$ok?'Appointment created.':'Failed to create appointment']);
