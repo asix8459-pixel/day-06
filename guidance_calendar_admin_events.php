@@ -7,9 +7,9 @@ header('Content-Type: application/json; charset=utf-8');
 $acting_user_id = $_SESSION['user_id'];
 $role = $_SESSION['role'] ?? '';
 if ($role === 'Guidance Admin') {
-    $res = $conn->query("SELECT id, appointment_date, status, student_id FROM appointments WHERE appointment_date IS NOT NULL");
+    $res = $conn->query("SELECT id, appointment_date, status, student_id FROM appointments WHERE appointment_date IS NOT NULL AND status NOT IN ('cancelled','rejected','Cancelled','Rejected')");
 } else {
-    $stmt = $conn->prepare("SELECT id, appointment_date, status, student_id FROM appointments WHERE appointment_date IS NOT NULL AND user_id = ?");
+    $stmt = $conn->prepare("SELECT id, appointment_date, status, student_id FROM appointments WHERE appointment_date IS NOT NULL AND status NOT IN ('cancelled','rejected','Cancelled','Rejected') AND user_id = ?");
     $stmt->bind_param('s', $acting_user_id);
     $stmt->execute();
     $res = $stmt->get_result();

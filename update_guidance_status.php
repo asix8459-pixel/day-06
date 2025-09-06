@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
     $acting_user_id = $_SESSION['user_id'];
     $role = $_SESSION['role'] ?? '';
 
-    $allowed = ['pending','approved','completed','rejected'];
+    $allowed = ['pending','approved','completed','rejected','cancelled'];
     $status_lower = strtolower($status);
     if ($request_id > 0 && in_array($status_lower, $allowed, true)) {
         // Ownership/permission check

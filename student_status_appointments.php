@@ -1,5 +1,6 @@
 <?php
 include 'config.php'; 
+include 'csrf.php';
 session_start();
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -14,7 +15,7 @@ $query = "SELECT a.*, u.first_name AS counselor_first, u.last_name AS counselor_
           WHERE a.student_id = ?
           ORDER BY a.appointment_date DESC";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $student_id);
+$stmt->bind_param("s", $student_id);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -80,9 +81,11 @@ $result = $stmt->get_result();
 </head>
 <body>
     <?php include 'student_header.php'; ?>
-<?php include('student_header.php'); ?>
     <div class="main-content">
         <h2>My Appointments</h2>
+        <?php if (isset($_GET['success'])): ?>
+            <p class="success-message" style="color:green; margin:10px 0;"><?= htmlspecialchars($_GET['success']) ?></p>
+        <?php endif; ?>
 
         <table>
             <thead>
@@ -93,6 +96,7 @@ $result = $stmt->get_result();
                     <th>Reason</th>
                     <th>Status</th>
                     <th>Admin Message</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -103,10 +107,21 @@ $result = $stmt->get_result();
                         <td><?= htmlspecialchars(trim(($row['counselor_first'] ?? '').' '.($row['counselor_last'] ?? '')) ?: '—') ?></td>
                         <td><?= htmlspecialchars($row['reason']) ?></td>
                         <td>
-                            <?php $st=strtolower($row['status']); $cls=$st==='approved'?'bg-approved':($st==='completed'?'bg-completed':($st==='rejected'?'bg-rejected':'bg-pending')); ?>
+                            <?php $st=strtolower($row['status']); $cls=$st==='approved'?'bg-approved':($st==='completed'?'bg-completed':($st==='rejected'?'bg-rejected':($st==='cancelled'?'bg-rejected':'bg-pending'))); ?>
                             <span class="badge <?= $cls ?>"><?= htmlspecialchars($row['status']) ?></span>
                         </td>
                         <td><?= htmlspecialchars($row['admin_message']) ?></td>
+                        <td>
+                            <?php if (in_array(strtolower($row['status']), ['pending','approved'], true)): ?>
+                                <form method="POST" action="cancel_guidance_request.php" onsubmit="return confirm('Cancel this appointment?');">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                    <input type="hidden" name="request_id" value="<?= htmlspecialchars($row['id']) ?>">
+                                    <button type="submit" style="background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">Cancel</button>
+                                </form>
+                            <?php else: ?>
+                                —
+                            <?php endif; ?>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>

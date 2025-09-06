@@ -195,6 +195,7 @@ if (!isset($_SESSION['csrf_token'])) {
                         <option value="approved">Approved</option>
                         <option value="completed">Completed</option>
                         <option value="rejected">Rejected</option>
+                        <option value="cancelled">Cancelled</option>
                     </select>
                     <label for="admin_message">Admin Message:</label>
                     <textarea id="admin_message" name="admin_message"></textarea>
