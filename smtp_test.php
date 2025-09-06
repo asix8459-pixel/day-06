@@ -75,7 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_test'])) {
                 </div>
                 <button class="btn" type="submit" name="send_test" value="1"><i class="fa-solid fa-paper-plane"></i> Send Test Email</button>
                 <div class="meta">
-                    Using SMTP host: <?= htmlspecialchars(getenv('SMTP_HOST') ?: 'PHP mail() fallback') ?> | From: <?= htmlspecialchars(getenv('SMTP_FROM') ?: APP_EMAIL_FROM) ?>
+                    Using SMTP host: <?= htmlspecialchars(defined('SMTP_HOST') ? SMTP_HOST : (getenv('SMTP_HOST') ?: 'PHP mail() fallback')) ?>
+                    | From: <?= htmlspecialchars(defined('SMTP_FROM') ? SMTP_FROM : (getenv('SMTP_FROM') ?: APP_EMAIL_FROM)) ?>
+                    | Secure: <?= htmlspecialchars(defined('SMTP_SECURE') ? SMTP_SECURE : (getenv('SMTP_SECURE') ?: 'tls')) ?>
+                    | Port: <?= htmlspecialchars(defined('SMTP_PORT') ? SMTP_PORT : (getenv('SMTP_PORT') ?: '587')) ?>
                 </div>
             </form>
         </div>

@@ -2,13 +2,24 @@
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 if (!isset($GLOBALS['SMTP_LAST_ERROR'])) { $GLOBALS['SMTP_LAST_ERROR'] = ''; }
 
+// Optional local SMTP config file for environments without env vars (e.g., XAMPP)
+// Create smtp_config.php with constants: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_SECURE
+try { if (file_exists(__DIR__.'/smtp_config.php')) { include_once __DIR__.'/smtp_config.php'; } } catch (Throwable $e) {}
+
+function smtp_get(string $key, ?string $default = null): ?string {
+    if (defined($key)) { return constant($key); }
+    $env = getenv($key);
+    if ($env !== false && $env !== '') { return $env; }
+    return $default;
+}
+
 function send_email(string $to, string $subject, string $htmlBody, ?string $textBody = null): bool {
     // If SMTP is configured, prefer SMTP
-    $smtpHost = getenv('SMTP_HOST') ?: '';
+    $smtpHost = smtp_get('SMTP_HOST', '');
     if ($smtpHost) {
         return smtp_send($to, $subject, $htmlBody, $textBody);
     }
-    $from = getenv('SMTP_FROM') ?: 'no-reply@yourdomain.com';
+    $from = smtp_get('SMTP_FROM', 'no-reply@yourdomain.com');
     $headers = [];
     $headers[] = 'MIME-Version: 1.0';
     $headers[] = 'Content-type: text/html; charset=UTF-8';
@@ -27,7 +38,7 @@ function send_email(string $to, string $subject, string $htmlBody, ?string $text
 }
 
 // Branding and ICS helpers
-if (!defined('APP_EMAIL_FROM')) { define('APP_EMAIL_FROM', 'no-reply@yourdomain.com'); }
+if (!defined('APP_EMAIL_FROM')) { define('APP_EMAIL_FROM', smtp_get('SMTP_FROM', 'no-reply@yourdomain.com')); }
 if (!defined('APP_BASE_URL')) {
     // Attempt to infer base URL; fallback to relative
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
@@ -77,12 +88,12 @@ function ics_download_link(int $appointmentId, string $startLocal): string {
 
 // Minimal SMTP implementation (LOGIN/PLAIN over TLS/SSL) without external deps
 function smtp_send(string $to, string $subject, string $htmlBody, ?string $textBody = null): bool {
-    $host = getenv('SMTP_HOST');
-    $port = (int)(getenv('SMTP_PORT') ?: 587);
-    $user = getenv('SMTP_USER');
-    $pass = getenv('SMTP_PASS');
-    $from = getenv('SMTP_FROM') ?: APP_EMAIL_FROM;
-    $secure = strtolower(getenv('SMTP_SECURE') ?: 'tls'); // tls, ssl, or none
+    $host = smtp_get('SMTP_HOST', '');
+    $port = (int)(smtp_get('SMTP_PORT', '587'));
+    $user = smtp_get('SMTP_USER', '');
+    $pass = smtp_get('SMTP_PASS', '');
+    $from = smtp_get('SMTP_FROM', APP_EMAIL_FROM);
+    $secure = strtolower(smtp_get('SMTP_SECURE', 'tls')); // tls, ssl, or none
     if (!$host || !$user || !$pass) { return false; }
 
     $transport = ($secure === 'ssl') ? "ssl://$host:$port" : "tcp://$host:$port";
