@@ -171,9 +171,6 @@ try {
         <a href="generate_reports.php" class="menu-item" id="generate-reports">
             <i class="bi bi-graph-up"></i> Generate Reports
         </a>
-        <a href="announcements_slideshow.php" class="menu-item" id="announcements">
-            <i class="bi bi-megaphone"></i> Announcements
-        </a>
         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'Guidance Admin'): ?>
         <a href="guidance_blackouts_admin.php" class="menu-item" id="blackouts">
             <i class="bi bi-cloud-slash"></i> Blackout Dates
