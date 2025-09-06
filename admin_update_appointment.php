@@ -7,9 +7,25 @@ if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_to
 
 $id = (int)($_POST['id'] ?? 0);
 $start = $_POST['start'] ?? '';
+$acting_user_id = $_SESSION['user_id'];
+$role = $_SESSION['role'] ?? '';
 if (!$id || $start===''){ http_response_code(400); echo json_encode(['success'=>false,'message'=>'Bad request']); exit; }
 try{ $dt=new DateTime($start); } catch(Exception $e){ http_response_code(400); echo json_encode(['success'=>false,'message'=>'Invalid date']); exit; }
 $date=$dt->format('Y-m-d H:i:s');
+// Permission: allow admin or owning counselor only
+$own = $conn->prepare("SELECT user_id FROM appointments WHERE id = ?");
+$own->bind_param('i', $id);
+$own->execute();
+$ownerRow = $own->get_result()->fetch_assoc();
+if (!$ownerRow) { http_response_code(404); echo json_encode(['success'=>false,'message'=>'Not found']); exit; }
+if ($role !== 'Guidance Admin' && $ownerRow['user_id'] !== $acting_user_id) { http_response_code(403); echo json_encode(['success'=>false,'message':'Forbidden']); exit; }
+
+// Conflict check (1 hour window)
+$chk=$conn->prepare("SELECT COUNT(*) AS c FROM appointments WHERE user_id=? AND id<>? AND appointment_date < ? AND DATE_ADD(appointment_date, INTERVAL 1 HOUR) > ?");
+$chk->bind_param('siss', $ownerRow['user_id'], $id, $date, $date);
+$chk->execute();
+$c=$chk->get_result()->fetch_assoc()['c'] ?? 0;
+if ($c > 0) { echo json_encode(['success'=>false,'message'=>'Time slot conflict']); exit; }
 
 $stmt=$conn->prepare("UPDATE appointments SET appointment_date=? WHERE id=? AND status IN ('pending','approved','Pending','Approved')");
 $stmt->bind_param('si', $date, $id);

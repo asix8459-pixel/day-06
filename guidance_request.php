@@ -25,6 +25,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             try {
                 $dtIn = new DateTime($appointment_date_raw);
                 $appointment_date = $dtIn->format('Y-m-d H:i:00');
+                if ($dtIn < new DateTime()) {
+                    $error_message = "Please select a future date/time.";
+                    $appointment_date = null;
+                }
             } catch (Exception $e) {
                 $error_message = "Invalid date/time format.";
                 $appointment_date = null;
@@ -37,7 +41,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($res) { $guidance_admin_id = $res['user_id']; }
             }
             if (!$guidance_admin_id) {
-                $guidance_admin_id = 'Guidance01'; // Fallback
+                $error_message = $error_message ?? "No available counselor at the moment. Please try again later.";
+                $appointment_date = null;
             }
             // Insert query (keep existing schema)
             $insertQuery = "INSERT INTO appointments (student_id, user_id, appointment_date, reason, status) VALUES (?, ?, ?, ?, 'pending')";
@@ -139,7 +144,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <?php include 'student_header.php'; ?>
-<?php include('student_header.php'); ?>
     <div class="main-content">
         <div class="container">
             <h2>Submit Guidance Request</h2>
