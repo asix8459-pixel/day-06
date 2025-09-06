@@ -151,6 +151,14 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch (e) {
     console.warn('Calendar failed to initialize:', e);
   }
+
+  // Auto-open modal if ?new=1
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('new') === '1') {
+      setTimeout(()=> modal.show(), 100);
+    }
+  } catch(_){}
 });
 </script>
 </body>

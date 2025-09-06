@@ -168,6 +168,9 @@ try {
         <a href="guidance_calendar_admin.php" class="menu-item" id="guidance-calendar">
             <i class="bi bi-calendar3"></i> Calendar
         </a>
+        <a href="guidance_calendar_admin.php?new=1" class="menu-item" id="guidance-new">
+            <i class="bi bi-plus-circle"></i> New Appointment
+        </a>
         <a href="generate_reports.php" class="menu-item" id="generate-reports">
             <i class="bi bi-graph-up"></i> Generate Reports
         </a>
