@@ -2,6 +2,7 @@
 include 'config.php';
 include 'csrf.php';
 require_once 'mailer.php';
+require_once 'audit_log.php';
 session_start();
 
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
@@ -18,6 +19,7 @@ $stmt->bind_param('is', $request_id, $student_id);
 $ok = $stmt->execute() && $stmt->affected_rows > 0;
 
 if ($ok) {
+    guidance_log_action($conn, $request_id, $student_id, 'cancel_by_student', '');
     // Notify counselor about cancellation
     $c = $conn->prepare("SELECT u.email, TRIM(CONCAT(u.first_name,' ',u.last_name)) AS name FROM appointments a JOIN users u ON a.user_id=u.user_id WHERE a.id=? AND a.student_id=?");
     $c->bind_param('is', $request_id, $student_id);

@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['Guidanc
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) { http_response_code(403); echo json_encode(['success'=>false,'message'=>'Invalid CSRF token']); exit; }
 require_once 'mailer.php';
 require_once 'guidance_availability.php';
+require_once 'audit_log.php';
 
 $id = (int)($_POST['id'] ?? 0);
 $datetime = trim($_POST['datetime'] ?? '');
@@ -41,6 +42,7 @@ $stmt=$conn->prepare("UPDATE appointments SET appointment_date=?, status='approv
 $stmt->bind_param('ssi', $at, $msg, $id);
 $ok=$stmt->execute();
 if ($ok) {
+  guidance_log_action($conn, $id, $_SESSION['user_id'], 'schedule_appointment', json_encode(['datetime'=>$at,'message'=>$msg]));
   // Notify student
   $stu = $conn->prepare("SELECT u.email, TRIM(CONCAT(u.first_name,' ',u.last_name)) AS name FROM appointments a JOIN users u ON a.student_id=u.user_id WHERE a.id=?");
   $stu->bind_param('i', $id);

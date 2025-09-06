@@ -2,6 +2,7 @@
 include 'config.php'; 
 session_start();
 require_once 'mailer.php';
+require_once 'audit_log.php';
 
 // Require role
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['Guidance Admin','Counselor'], true)) {
@@ -43,6 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
         $notify = true;
 
         if ($stmt->execute()) {
+            guidance_log_action($conn, $request_id, $acting_user_id, 'status_update', json_encode(['status'=>$status_lower,'message'=>$admin_message]));
             // Notify student about status change
             $stu = $conn->prepare("SELECT u.email, TRIM(CONCAT(u.first_name,' ',u.last_name)) AS name FROM appointments a JOIN users u ON a.student_id=u.user_id WHERE a.id=?");
             $stu->bind_param('i', $request_id);

@@ -120,6 +120,15 @@ $result = $stmt->get_result();
                                     <input type="hidden" name="request_id" value="<?= htmlspecialchars($row['id']) ?>">
                                     <button type="submit" style="background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">Cancel</button>
                                 </form>
+                                <?php if (strtolower($row['status']) === 'approved'): ?>
+                                <form method="POST" action="student_request_reschedule.php" onsubmit="return confirm('Send reschedule request?');" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                    <input type="hidden" name="appointment_id" value="<?= htmlspecialchars($row['id']) ?>">
+                                    <input type="datetime-local" name="new_datetime" required style="padding:6px 8px; border:1px solid #ced4da; border-radius:4px;">
+                                    <input type="text" name="note" placeholder="Optional note" style="padding:6px 8px; border:1px solid #ced4da; border-radius:4px;">
+                                    <button type="submit" style="background:#0d6efd; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">Request Reschedule</button>
+                                </form>
+                                <?php endif; ?>
                             <?php endif; ?>
                             <?php if (in_array(strtolower($row['status']), ['approved','completed'], true) && !empty($row['appointment_date'])): ?>
                                 <?php

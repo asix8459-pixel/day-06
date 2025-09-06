@@ -130,6 +130,12 @@ if (!isset($_SESSION['csrf_token'])) {
     <?php include 'guidance_admin_header.php'; ?>
     <div class="main-content">
         <h2>Guidance Requests</h2>
+        <?php
+        $resReqs = [];
+        $conn->query("CREATE TABLE IF NOT EXISTS reschedule_requests (id INT AUTO_INCREMENT PRIMARY KEY, appointment_id INT NOT NULL, student_id VARCHAR(64) NOT NULL, requested_datetime DATETIME NOT NULL, note TEXT NULL, status VARCHAR(16) NOT NULL DEFAULT 'open', created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, INDEX(appointment_id), INDEX(status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $rr = $conn->query("SELECT appointment_id, requested_datetime, note FROM reschedule_requests WHERE status='open'");
+        if ($rr) { while($r=$rr->fetch_assoc()){ $resReqs[(int)$r['appointment_id']]=$r; } }
+        ?>
         <?php if (isset($_GET['success'])): ?>
             <p class="success-message"><?= htmlspecialchars($_GET['success']) ?></p>
         <?php endif; ?>
@@ -167,6 +173,9 @@ if (!isset($_SESSION['csrf_token'])) {
                             <td>
                                 <button class="action-link" onclick="openUpdateModal('<?= htmlspecialchars($row['id']) ?>', '<?= htmlspecialchars($row['status']) ?>')">Update</button>
                                 <button class="action-link" onclick="openScheduleModal('<?= htmlspecialchars($row['id']) ?>')">Schedule</button>
+                                <?php if (isset($resReqs[(int)$row['id']])): $rq=$resReqs[(int)$row['id']]; ?>
+                                <span class="badge bg-pending" title="Reschedule requested to <?= htmlspecialchars($rq['requested_datetime']) ?><?= $rq['note']?(' - '.htmlspecialchars($rq['note'])):'' ?>">Reschedule Req</span>
+                                <?php endif; ?>
                                 <?php if (strtolower($row['status']) === 'approved'): ?>
                                 <button class="action-link" style="background:#0d6efd" onclick="markCompleted('<?= htmlspecialchars($row['id']) ?>')">Complete</button>
                                 <?php endif; ?>
@@ -245,6 +254,15 @@ if (!isset($_SESSION['csrf_token'])) {
         }
         function openScheduleModal(request_id){
             document.getElementById('schedule_request_id').value = request_id;
+            try {
+                const res = <?= json_encode($resReqs) ?>;
+                if (res && res[request_id] && res[request_id].requested_datetime) {
+                    const input = document.querySelector('#scheduleForm input[name="datetime"]');
+                    const dt = new Date(res[request_id].requested_datetime.replace(' ', 'T'));
+                    dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
+                    input.value = dt.toISOString().slice(0,16);
+                }
+            } catch(e){}
             document.getElementById('scheduleModal').style.display = 'flex';
         }
         function submitSchedule(){

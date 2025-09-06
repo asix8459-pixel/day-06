@@ -6,6 +6,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['Guidanc
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) { http_response_code(403); echo json_encode(['success'=>false,'message'=>'Invalid CSRF token']); exit; }
 require_once 'mailer.php';
 require_once 'guidance_availability.php';
+require_once 'audit_log.php';
 
 $student_id = $_POST['student_id'] ?? '';
 $counselor_id = $_POST['counselor_id'] ?? '';
@@ -33,6 +34,7 @@ $stmt=$conn->prepare("INSERT INTO appointments (student_id, user_id, appointment
 $stmt->bind_param('ssss', $student_id, $counselor_id, $startStr, $reason);
 $ok=$stmt->execute();
 if ($ok) {
+  guidance_log_action($conn, (int)$conn->insert_id, $_SESSION['user_id'], 'create_appointment', json_encode(['student_id'=>$student_id,'start'=>$startStr]));
   // Notify student
   $stu = $conn->prepare("SELECT email, TRIM(CONCAT(first_name,' ',last_name)) AS name FROM users WHERE user_id=?");
   $stu->bind_param('s', $student_id);
