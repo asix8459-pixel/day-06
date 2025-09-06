@@ -1,6 +1,7 @@
 <?php
 include 'config.php'; 
 include 'csrf.php';
+include 'mailer.php';
 session_start();
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -112,15 +113,22 @@ $result = $stmt->get_result();
                         </td>
                         <td><?= htmlspecialchars($row['admin_message']) ?></td>
                         <td>
+                            <div style="display:flex; gap:8px; align-items:center;">
                             <?php if (in_array(strtolower($row['status']), ['pending','approved'], true)): ?>
-                                <form method="POST" action="cancel_guidance_request.php" onsubmit="return confirm('Cancel this appointment?');">
+                                <form method="POST" action="cancel_guidance_request.php" onsubmit="return confirm('Cancel this appointment?');" style="display:inline;">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                     <input type="hidden" name="request_id" value="<?= htmlspecialchars($row['id']) ?>">
                                     <button type="submit" style="background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">Cancel</button>
                                 </form>
-                            <?php else: ?>
+                            <?php endif; ?>
+                            <?php if (in_array(strtolower($row['status']), ['approved','completed'], true) && !empty($row['appointment_date'])): ?>
+                                <?php $ics = ics_download_link((int)$row['id'], $row['appointment_date']); ?>
+                                <a href="<?= htmlspecialchars($ics) ?>" style="background:#0d6efd; color:#fff; padding:6px 10px; border-radius:4px; text-decoration:none;">Add to Calendar</a>
+                            <?php endif; ?>
+                            <?php if (!in_array(strtolower($row['status']), ['pending','approved'], true) && !(in_array(strtolower($row['status']), ['approved','completed'], true) && !empty($row['appointment_date']))): ?>
                                 —
                             <?php endif; ?>
+                            </div>
                         </td>
                     </tr>
                 <?php endwhile; ?>

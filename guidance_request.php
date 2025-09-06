@@ -166,6 +166,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <label for="appointment_date">Appointment Date:</label>
                 <input type="datetime-local" id="appointment_date" name="appointment_date" required>
+                <script>
+                (function(){
+                    try{
+                        const input = document.getElementById('appointment_date');
+                        const now = new Date();
+                        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                        const iso = now.toISOString().slice(0,16);
+                        input.min = iso;
+                    }catch(e){}
+                })();
+                </script>
                 <label for="reason">Reason:</label>
                 <textarea id="reason" name="reason" required minlength="10" placeholder="Briefly describe your concern..."></textarea>
                 <small class="helper">We will try to accommodate your preferred time and match you with an available counselor.</small>
