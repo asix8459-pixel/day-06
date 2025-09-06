@@ -30,9 +30,10 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guidance Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/guidance_theme.css">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Inter','Segoe UI',Arial,sans-serif; background:#f6f9fc; }
+        body { font-family:'Inter','Segoe UI',Arial,sans-serif; }
         .main-content { margin-left: 280px; padding: 24px; }
         .hero { background: linear-gradient(135deg, #003366 0%, #0b5ed7 100%); color:#fff; border-radius:16px; padding:24px; box-shadow:0 16px 40px rgba(2,32,71,.25); }
         .hero h2 { margin:0 0 8px; font-weight:800; letter-spacing:.3px; }
@@ -64,35 +65,35 @@ try {
 <body>
     <?php include 'guidance_admin_header.php'; ?>
 
-    <div class="main-content">
-        <div class="hero">
+    <div class="main-content guidance-theme">
+        <div class="g-hero fade-in">
             <h2><i class="fa-solid fa-shield-heart"></i> Guidance Admin Dashboard</h2>
             <p>Oversee requests, appointments, announcements, and reports in one place.</p>
         </div>
 
         <div class="grid" style="margin-top:16px;">
-            <div class="stat">
+            <div class="stat hover-rise">
                 <div class="ic ic-pending"><i class="fa-solid fa-hourglass-half"></i></div>
                 <div class="txt">
                     <div class="k"><?php echo htmlspecialchars((string)$totalPending); ?></div>
                     <div class="l">Pending Requests</div>
                 </div>
             </div>
-            <div class="stat">
+            <div class="stat hover-rise">
                 <div class="ic ic-approved"><i class="fa-solid fa-check-circle"></i></div>
                 <div class="txt">
                     <div class="k"><?php echo htmlspecialchars((string)$totalApprovedToday); ?></div>
                     <div class="l">Approved Today</div>
                 </div>
             </div>
-            <div class="stat">
+            <div class="stat hover-rise">
                 <div class="ic ic-upcoming"><i class="fa-solid fa-calendar-day"></i></div>
                 <div class="txt">
                     <div class="k"><?php echo htmlspecialchars((string)$upcomingCount); ?></div>
                     <div class="l">Upcoming Appts</div>
                 </div>
             </div>
-            <div class="stat">
+            <div class="stat hover-rise">
                 <div class="ic ic-next"><i class="fa-solid fa-bell"></i></div>
                 <div class="txt">
                     <div class="k"><?php echo $nextAppt ? htmlspecialchars(date('M d, H:i', strtotime($nextAppt['appointment_date']))) : '—'; ?></div>
@@ -102,27 +103,26 @@ try {
         </div>
 
         <div class="grid" style="margin-top:16px;">
-            <div class="card">
+            <div class="card fade-in">
                 <h3>Quick Actions</h3>
                 <div class="quick">
-                    <a href="guidance_list_admin.php"><i class="fa-solid fa-list"></i> Manage Requests</a>
-                    <a href="guidance_calendar_admin.php" class="secondary"><i class="fa-solid fa-calendar"></i> Open Calendar</a>
-                    <a href="guidance_blackouts_admin.php" class="warning"><i class="fa-solid fa-cloud-slash"></i> Blackout Dates</a>
-                    <a href="generate_reports.php"><i class="fa-solid fa-chart-line"></i> Reports</a>
-                    <a href="announcements_slideshow.php"><i class="fa-solid fa-bullhorn"></i> Announcements</a>
+                    <a class="g-btn" href="guidance_list_admin.php"><i class="fa-solid fa-list"></i> Manage Requests</a>
+                    <a class="g-btn" href="guidance_calendar_admin.php" style="background:var(--brand-2); box-shadow:0 8px 24px rgba(18,184,134,.22)"><i class="fa-solid fa-calendar"></i> Open Calendar</a>
+                    <a class="g-btn" href="guidance_blackouts_admin.php" style="background:var(--warn); box-shadow:0 8px 24px rgba(245,159,0,.22)"><i class="fa-solid fa-cloud-slash"></i> Blackout Dates</a>
+                    <a class="g-btn" href="generate_reports.php"><i class="fa-solid fa-chart-line"></i> Reports</a>
                 </div>
             </div>
-            <div class="card">
+            <div class="card fade-in">
                 <h3>Upcoming Appointments</h3>
                 <?php if (count($upcomingRows)): ?>
-                <table>
+                <table class="g-table">
                     <thead><tr><th>When</th><th>Student</th><th>Status</th><th>Reason</th></tr></thead>
                     <tbody>
                         <?php foreach($upcomingRows as $r): $st=strtolower($r['status']); $cls=$st==='approved'?'bg-approved':'bg-pending'; ?>
                         <tr>
                             <td><?php echo htmlspecialchars(date('M d, Y H:i', strtotime($r['appointment_date']))); ?></td>
                             <td><?php echo htmlspecialchars(($r['first_name'] ?? '').' '.($r['last_name'] ?? '')); ?></td>
-                            <td><span class="badge <?php echo $cls; ?>"><?php echo htmlspecialchars(ucfirst($st)); ?></span></td>
+                            <td><span class="g-badge <?php echo $st==='approved'?'approved':'pending'; ?>"><?php echo htmlspecialchars(ucfirst($st)); ?></span></td>
                             <td><?php echo htmlspecialchars($r['reason'] ?? ''); ?></td>
                         </tr>
                         <?php endforeach; ?>
