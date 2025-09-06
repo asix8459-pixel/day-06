@@ -87,74 +87,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-        }
-
-        .main-content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: calc(100vh - 56px); /* Adjusting for the navbar height */
-        }
-
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-            color: #333333;
-        }
-
-        .success-message {
-            color: green;
-            margin-bottom: 15px;
-        }
-
-        .error-message {
-            color: red;
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            text-align: left;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #dddddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        small.helper { display:block; text-align:left; color:#6c757d; margin-top:-10px; margin-bottom:10px; }
-
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
+        body { font-family:'Roboto',sans-serif; background:#f6f9fc; margin:0; }
+        .main-content { display:flex; justify-content:center; align-items:center; min-height: calc(100vh - 56px); padding:24px; }
+        .container { background:#fff; padding:24px; border-radius:12px; box-shadow:0 12px 40px rgba(2,32,71,.12); width:100%; max-width:560px; text-align:left; }
+        h2 { margin-bottom:12px; color:#0f172a; }
+        .toast { background:#d1e7dd; color:#0f5132; padding:12px 14px; border-radius:10px; box-shadow:0 8px 24px rgba(2,32,71,.08); margin-bottom:12px; }
+        .toast.error { background:#f8d7da; color:#842029; }
+        label { display:block; margin:10px 0 6px; color:#334155; font-weight:600; }
+        input, textarea { width:100%; padding:12px; border:1px solid #e5e7eb; border-radius:10px; font-size:16px; background:#fff; box-shadow:0 2px 8px rgba(2,32,71,.06); }
+        input:focus, textarea:focus { outline:none; border-color:#0d6efd; box-shadow:0 0 0 3px rgba(13,110,253,.15); }
+        small.helper { display:block; color:#64748b; margin-top:6px; }
+        .row { display:flex; gap:12px; align-items:center; }
+        .btn { padding:12px 16px; background:#0d6efd; color:#fff; border:none; border-radius:10px; cursor:pointer; box-shadow:0 8px 20px rgba(13,110,253,.18); }
+        .btn:hover { background:#0b5ed7; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="assets/student_theme.css">
@@ -165,10 +110,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="container">
             <h2>Submit Guidance Request</h2>
             <?php if (isset($success_message)): ?>
-                <p class="success-message"><?= htmlspecialchars($success_message) ?></p>
+                <div class="toast"><?= htmlspecialchars($success_message) ?></div>
             <?php endif; ?>
             <?php if (isset($error_message)): ?>
-                <p class="error-message"><?= htmlspecialchars($error_message) ?></p>
+                <div class="toast error"><?= htmlspecialchars($error_message) ?></div>
             <?php endif; ?>
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
@@ -199,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label for="reason">Reason:</label>
                 <textarea id="reason" name="reason" required minlength="10" placeholder="Briefly describe your concern..."></textarea>
                 <small class="helper">We will try to accommodate your preferred time and match you with an available counselor.</small>
-                <button type="submit">Submit Request</button>
+                <button type="submit" class="btn">Submit Request</button>
             </form>
         </div>
     </div>
