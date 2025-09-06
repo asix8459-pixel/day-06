@@ -2,7 +2,12 @@
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 
 function send_email(string $to, string $subject, string $htmlBody, ?string $textBody = null): bool {
-    $from = 'no-reply@yourdomain.com';
+    // If SMTP is configured, prefer SMTP
+    $smtpHost = getenv('SMTP_HOST') ?: '';
+    if ($smtpHost) {
+        return smtp_send($to, $subject, $htmlBody, $textBody);
+    }
+    $from = getenv('SMTP_FROM') ?: 'no-reply@yourdomain.com';
     $headers = [];
     $headers[] = 'MIME-Version: 1.0';
     $headers[] = 'Content-type: text/html; charset=UTF-8';
@@ -67,6 +72,47 @@ function ics_download_link(int $appointmentId, string $startLocal): string {
     [$startUtc, $endUtc] = ics_format_datetime_utc($startLocal);
     $sig = ics_hmac($appointmentId, $startUtc, $endUtc);
     return APP_BASE_URL.'download_appointment_ics.php?id='.$appointmentId.'&s='.$startUtc.'&e='.$endUtc.'&sig='.$sig;
+}
+
+// Minimal SMTP implementation (LOGIN/PLAIN over TLS) without external deps
+function smtp_send(string $to, string $subject, string $htmlBody, ?string $textBody = null): bool {
+    $host = getenv('SMTP_HOST');
+    $port = (int)(getenv('SMTP_PORT') ?: 587);
+    $user = getenv('SMTP_USER');
+    $pass = getenv('SMTP_PASS');
+    $from = getenv('SMTP_FROM') ?: APP_EMAIL_FROM;
+    $secure = strtolower(getenv('SMTP_SECURE') ?: 'tls'); // tls or none
+    if (!$host || !$user || !$pass) { return false; }
+
+    $sock = ($secure === 'tls') ? @stream_socket_client("tcp://$host:$port", $errno, $errstr, 15) : @fsockopen($host, $port, $errno, $errstr, 15);
+    if (!$sock) { return false; }
+    $read = function() use ($sock) { return fgets($sock, 515); };
+    $send = function($cmd) use ($sock) { fwrite($sock, $cmd."\r\n"); return true; };
+    $expect = function($code) use ($read) { $resp = ''; while ($line = $read()) { $resp .= $line; if (isset($line[3]) && $line[3] === ' ') break; } return str_starts_with($resp, (string)$code); };
+
+    if (!$expect(220)) { fclose($sock); return false; }
+    $send('EHLO localhost'); if (!$expect(250)) { $send('HELO localhost'); if (!$expect(250)) { fclose($sock); return false; } }
+    if ($secure === 'tls') { $send('STARTTLS'); if (!$expect(220)) { fclose($sock); return false; } if (!stream_socket_enable_crypto($sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) { fclose($sock); return false; } $send('EHLO localhost'); if (!$expect(250)) { fclose($sock); return false; } }
+    $send('AUTH LOGIN'); if (!$expect(334)) { fclose($sock); return false; }
+    $send(base64_encode($user)); if (!$expect(334)) { fclose($sock); return false; }
+    $send(base64_encode($pass)); if (!$expect(235)) { fclose($sock); return false; }
+    $send('MAIL FROM:<'.$from.'>'); if (!$expect(250)) { fclose($sock); return false; }
+    $send('RCPT TO:<'.$to.'>'); if (!$expect(250)) { fclose($sock); return false; }
+    $send('DATA'); if (!$expect(354)) { fclose($sock); return false; }
+
+    $boundary = 'bnd_'.bin2hex(random_bytes(6));
+    $safeSubject = 'NEUST Guidance: '.$subject;
+    $headers = 'From: '.$from."\r\n".'MIME-Version: 1.0' . "\r\n" . 'Content-Type: multipart/alternative; boundary="'.$boundary.'"';
+    $text = $textBody ?: strip_tags($htmlBody);
+    $html = '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;">'.$htmlBody.'</body></html>';
+    $data = 'Subject: '.$safeSubject."\r\n".$headers."\r\n\r\n".
+            '--'.$boundary."\r\n".'Content-Type: text/plain; charset=UTF-8' . "\r\n\r\n".$text."\r\n".
+            '--'.$boundary."\r\n".'Content-Type: text/html; charset=UTF-8' . "\r\n\r\n".$html."\r\n".
+            '--'.$boundary.'--' . "\r\n.";
+
+    fwrite($sock, $data."\r\n");
+    $send('.'); if (!$expect(250)) { fclose($sock); return false; }
+    $send('QUIT'); fclose($sock); return true;
 }
 ?>
 
