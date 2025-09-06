@@ -1,5 +1,6 @@
 <?php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
+if (!isset($GLOBALS['SMTP_LAST_ERROR'])) { $GLOBALS['SMTP_LAST_ERROR'] = ''; }
 
 function send_email(string $to, string $subject, string $htmlBody, ?string $textBody = null): bool {
     // If SMTP is configured, prefer SMTP
@@ -74,31 +75,40 @@ function ics_download_link(int $appointmentId, string $startLocal): string {
     return APP_BASE_URL.'download_appointment_ics.php?id='.$appointmentId.'&s='.$startUtc.'&e='.$endUtc.'&sig='.$sig;
 }
 
-// Minimal SMTP implementation (LOGIN/PLAIN over TLS) without external deps
+// Minimal SMTP implementation (LOGIN/PLAIN over TLS/SSL) without external deps
 function smtp_send(string $to, string $subject, string $htmlBody, ?string $textBody = null): bool {
     $host = getenv('SMTP_HOST');
     $port = (int)(getenv('SMTP_PORT') ?: 587);
     $user = getenv('SMTP_USER');
     $pass = getenv('SMTP_PASS');
     $from = getenv('SMTP_FROM') ?: APP_EMAIL_FROM;
-    $secure = strtolower(getenv('SMTP_SECURE') ?: 'tls'); // tls or none
+    $secure = strtolower(getenv('SMTP_SECURE') ?: 'tls'); // tls, ssl, or none
     if (!$host || !$user || !$pass) { return false; }
 
-    $sock = ($secure === 'tls') ? @stream_socket_client("tcp://$host:$port", $errno, $errstr, 15) : @fsockopen($host, $port, $errno, $errstr, 15);
-    if (!$sock) { return false; }
+    $transport = ($secure === 'ssl') ? "ssl://$host:$port" : "tcp://$host:$port";
+    $sock = @stream_socket_client($transport, $errno, $errstr, 20);
+    if (!$sock) { $GLOBALS['SMTP_LAST_ERROR'] = "Connect failed: $errstr ($errno)"; return false; }
     $read = function() use ($sock) { return fgets($sock, 515); };
     $send = function($cmd) use ($sock) { fwrite($sock, $cmd."\r\n"); return true; };
-    $expect = function($code) use ($read) { $resp = ''; while ($line = $read()) { $resp .= $line; if (isset($line[3]) && $line[3] === ' ') break; } return str_starts_with($resp, (string)$code); };
+    $starts_with = function($hay, $needle){ return substr($hay, 0, strlen((string)$needle)) === (string)$needle; };
+    $expect = function($code) use ($read, $starts_with) { $resp = ''; while ($line = $read()) { $resp .= $line; if (isset($line[3]) && $line[3] === ' ') break; } return [$starts_with($resp, (string)$code), $resp]; };
 
-    if (!$expect(220)) { fclose($sock); return false; }
-    $send('EHLO localhost'); if (!$expect(250)) { $send('HELO localhost'); if (!$expect(250)) { fclose($sock); return false; } }
-    if ($secure === 'tls') { $send('STARTTLS'); if (!$expect(220)) { fclose($sock); return false; } if (!stream_socket_enable_crypto($sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) { fclose($sock); return false; } $send('EHLO localhost'); if (!$expect(250)) { fclose($sock); return false; } }
-    $send('AUTH LOGIN'); if (!$expect(334)) { fclose($sock); return false; }
-    $send(base64_encode($user)); if (!$expect(334)) { fclose($sock); return false; }
-    $send(base64_encode($pass)); if (!$expect(235)) { fclose($sock); return false; }
-    $send('MAIL FROM:<'.$from.'>'); if (!$expect(250)) { fclose($sock); return false; }
-    $send('RCPT TO:<'.$to.'>'); if (!$expect(250)) { fclose($sock); return false; }
-    $send('DATA'); if (!$expect(354)) { fclose($sock); return false; }
+    [$ok, $resp] = $expect(220); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "Server banner: $resp"; fclose($sock); return false; }
+    $send('EHLO localhost'); [$ok,$resp] = $expect(250); if (!$ok) { $send('HELO localhost'); [$ok,$resp] = $expect(250); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "HELO/EHLO failed: $resp"; fclose($sock); return false; } }
+    if ($secure === 'tls') { $send('STARTTLS'); [$ok,$resp] = $expect(220); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "STARTTLS failed: $resp"; fclose($sock); return false; } if (!stream_socket_enable_crypto($sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) { $GLOBALS['SMTP_LAST_ERROR'] = 'TLS crypto enable failed'; fclose($sock); return false; } $send('EHLO localhost'); [$ok,$resp] = $expect(250); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "Post-TLS EHLO failed: $resp"; fclose($sock); return false; } }
+
+    // Try AUTH LOGIN, fallback to AUTH PLAIN
+    $send('AUTH LOGIN'); [$ok,$resp] = $expect(334);
+    if ($ok) {
+        $send(base64_encode($user)); [$ok,$resp] = $expect(334); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "Username not accepted: $resp"; fclose($sock); return false; }
+        $send(base64_encode($pass)); [$ok,$resp] = $expect(235); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "Password not accepted: $resp"; fclose($sock); return false; }
+    } else {
+        $authPlain = base64_encode("\0$user\0$pass");
+        $send('AUTH PLAIN '.$authPlain); [$ok,$resp] = $expect(235); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "AUTH failed: $resp"; fclose($sock); return false; }
+    }
+    $send('MAIL FROM:<'.$from.'>'); [$ok,$resp] = $expect(250); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "MAIL FROM failed: $resp"; fclose($sock); return false; }
+    $send('RCPT TO:<'.$to.'>'); [$ok,$resp] = $expect(250); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "RCPT TO failed: $resp"; fclose($sock); return false; }
+    $send('DATA'); [$ok,$resp] = $expect(354); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "DATA command failed: $resp"; fclose($sock); return false; }
 
     $boundary = 'bnd_'.bin2hex(random_bytes(6));
     $safeSubject = 'NEUST Guidance: '.$subject;
@@ -111,7 +121,7 @@ function smtp_send(string $to, string $subject, string $htmlBody, ?string $textB
             '--'.$boundary.'--' . "\r\n.";
 
     fwrite($sock, $data."\r\n");
-    $send('.'); if (!$expect(250)) { fclose($sock); return false; }
+    $send('.'); [$ok,$resp] = $expect(250); if (!$ok) { $GLOBALS['SMTP_LAST_ERROR'] = "Message not accepted: $resp"; fclose($sock); return false; }
     $send('QUIT'); fclose($sock); return true;
 }
 ?>

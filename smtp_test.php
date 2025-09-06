@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_test'])) {
     } else {
         $content = '<p>'.$message.'</p>';
         $ok = @send_branded_email($to, $subject, 'SMTP Test', $content);
-        $result_message = $ok ? 'Test email sent. Please check the inbox.' : 'Failed to send email. Check SMTP settings.';
+        $detail = $GLOBALS['SMTP_LAST_ERROR'] ?? '';
+        $result_message = $ok ? 'Test email sent. Please check the inbox.' : ('Failed to send email. Check SMTP settings. '.($detail?('Details: '.$detail):''));
     }
 }
 ?>
