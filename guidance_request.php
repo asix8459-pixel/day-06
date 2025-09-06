@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             // Pick a guidance admin/counselor to assign
             $guidance_admin_id = null;
-            $sel = $conn->prepare("SELECT user_id FROM users WHERE role IN ('Guidance Admin','Counselor') AND status = 'Active' ORDER BY role = 'Guidance Admin' DESC, user_id ASC LIMIT 1");
+            $sel = $conn->prepare("SELECT user_id FROM users WHERE role = 'Guidance Admin' AND status = 'Active' LIMIT 1");
             if ($sel && $sel->execute()) {
                 $res = $sel->get_result()->fetch_assoc();
                 if ($res) { $guidance_admin_id = $res['user_id']; }
