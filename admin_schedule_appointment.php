@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=utf-8');
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['Guidance Admin','Counselor'], true)) { http_response_code(403); echo json_encode(['success'=>false,'message'=>'Unauthorized']); exit; }
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) { http_response_code(403); echo json_encode(['success'=>false,'message'=>'Invalid CSRF token']); exit; }
 require_once 'mailer.php';
+require_once 'guidance_availability.php';
 
 $id = (int)($_POST['id'] ?? 0);
 $datetime = trim($_POST['datetime'] ?? '');
@@ -15,6 +16,12 @@ $role = $_SESSION['role'] ?? '';
 if (!$id || !$datetime){ http_response_code(400); echo json_encode(['success'=>false,'message'=>'Missing fields']); exit; }
 try{ $dt=new DateTime($datetime); } catch(Exception $e){ http_response_code(400); echo json_encode(['success'=>false,'message'=>'Invalid datetime']); exit; }
 $at = $dt->format('Y-m-d H:i:00');
+
+// Business hours check
+if (!guidance_is_within_business_hours(new DateTime($at))) {
+  echo json_encode(['success'=>false,'message'=>'Outside business hours (Mon–Fri, 08:00–17:00).']);
+  exit;
+}
 // Permission: allow admin or owning counselor only
 $own = $conn->prepare("SELECT user_id FROM appointments WHERE id = ?");
 $own->bind_param('i', $id);

@@ -174,6 +174,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
                         const iso = now.toISOString().slice(0,16);
                         input.min = iso;
+                        input.addEventListener('change', function(){
+                            const v = this.value;
+                            if(!v) return;
+                            const d = new Date(v);
+                            const local = new Date(d.getTime() - (d.getTimezoneOffset()*60000));
+                            const day = local.getDay(); // 0=Sun,1=Mon
+                            const h = local.getHours();
+                            if (day === 0 || day === 6 || h < 8 || h > 16) {
+                                alert('Preferred time is outside business hours (Mon–Fri, 08:00–17:00). You can submit, but scheduling may adjust.');
+                            }
+                        });
                     }catch(e){}
                 })();
                 </script>
