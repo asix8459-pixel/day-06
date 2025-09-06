@@ -48,8 +48,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
             $stu->bind_param('i', $request_id);
             $stu->execute(); $s = $stu->get_result()->fetch_assoc();
             if ($s && !empty($s['email'])) {
-                $html = '<p>Hello '.htmlspecialchars($s['name']).',</p><p>Your guidance request status has been updated to <strong>'.htmlspecialchars(ucfirst($status_lower)).'</strong>.</p>'.($admin_message?('<p>Message: '.htmlspecialchars($admin_message).'</p>'):'');
-                @send_email($s['email'], 'Guidance Request Updated', $html, strip_tags($html));
+                $content = '<p>Hello '.htmlspecialchars($s['name']).',</p><p>Your guidance request status has been updated to <strong>'.htmlspecialchars(ucfirst($status_lower)).'</strong>.</p>'.($admin_message?('<p>Message: '.htmlspecialchars($admin_message).'</p>'):'');
+                @send_branded_email($s['email'], 'Guidance Request Updated', 'Guidance Request Updated', $content);
             }
             header("Location: guidance_list_admin.php?success=" . urlencode('Guidance request updated successfully'));
             exit();

@@ -39,8 +39,9 @@ if ($ok) {
   $stu->bind_param('i', $id);
   $stu->execute(); $s = $stu->get_result()->fetch_assoc();
   if ($s && !empty($s['email'])) {
-    $html = '<p>Hello '.htmlspecialchars($s['name']).',</p><p>Your guidance appointment has been scheduled/updated.</p><p><strong>Date & Time:</strong> '.htmlspecialchars($at).'</p>'; 
-    @send_email($s['email'], 'Appointment Scheduled', $html, strip_tags($html));
+    $ics = ics_download_link($id, $at);
+    $content = '<p>Hello '.htmlspecialchars($s['name']).',</p><p>Your guidance appointment has been scheduled/updated.</p><p><strong>Date & Time:</strong> '.htmlspecialchars($at).'</p><p><a href="'.htmlspecialchars($ics).'" style="background:#0d6efd;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;">Add to Calendar</a></p>';
+    @send_branded_email($s['email'], 'Appointment Scheduled', 'Appointment Scheduled', $content);
   }
 }
 echo json_encode(['success'=>$ok, 'message'=>$ok?'Scheduled and approved.':'Update failed']);

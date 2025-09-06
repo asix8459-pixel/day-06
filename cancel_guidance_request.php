@@ -23,8 +23,8 @@ if ($ok) {
     $c->bind_param('is', $request_id, $student_id);
     $c->execute(); $cr = $c->get_result()->fetch_assoc();
     if ($cr && !empty($cr['email'])) {
-        $html = '<p>Hello '.htmlspecialchars($cr['name']).',</p><p>A student has cancelled their guidance appointment (ID #'.htmlspecialchars((string)$request_id).').</p>';
-        @send_email($cr['email'], 'Appointment Cancelled', $html, strip_tags($html));
+        $content = '<p>Hello '.htmlspecialchars($cr['name']).',</p><p>A student has cancelled their guidance appointment (ID #'.htmlspecialchars((string)$request_id).').</p>';
+        @send_branded_email($cr['email'], 'Appointment Cancelled', 'Appointment Cancelled', $content);
     }
 }
 

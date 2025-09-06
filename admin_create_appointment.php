@@ -32,8 +32,9 @@ if ($ok) {
   $stu->execute(); $stuRes = $stu->get_result()->fetch_assoc();
   $email = $stuRes['email'] ?? '';
   if ($email) {
-    $html = '<p>Hello '.htmlspecialchars($stuRes['name'] ?? $student_id).',</p><p>Your guidance appointment has been created and approved.</p><p><strong>Date & Time:</strong> '.htmlspecialchars($startStr).'</p><p>If you need to reschedule, please coordinate with your counselor.</p>';
-    @send_email($email, 'Appointment Confirmed', $html, strip_tags($html));
+    $ics = ics_download_link((int)$conn->insert_id, $startStr);
+    $content = '<p>Hello '.htmlspecialchars($stuRes['name'] ?? $student_id).',</p><p>Your guidance appointment has been created and approved.</p><p><strong>Date & Time:</strong> '.htmlspecialchars($startStr).'</p><p><a href="'.htmlspecialchars($ics).'" style="background:#0d6efd;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;">Add to Calendar</a></p><p>If you need to reschedule, please coordinate with your counselor.</p>';
+    @send_branded_email($email, 'Appointment Confirmed', 'Appointment Confirmed', $content);
   }
 }
 echo json_encode(['success'=>$ok, 'message'=>$ok?'Appointment created.':'Failed to create appointment']);

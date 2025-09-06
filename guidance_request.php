@@ -57,8 +57,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $me->bind_param('s', $student_id);
                     $me->execute(); $meRes = $me->get_result()->fetch_assoc();
                     if ($meRes && !empty($meRes['email'])) {
-                        $html = '<p>Hello '.htmlspecialchars($meRes['name'] ?? $student_id).',</p><p>Your guidance request has been received and is currently pending. You will be notified once a counselor schedules your appointment.</p>';
-                        @send_email($meRes['email'], 'Request Received', $html, strip_tags($html));
+                        $content = '<p>Hello '.htmlspecialchars($meRes['name'] ?? $student_id).',</p><p>Your guidance request has been received and is currently pending. You will be notified once a counselor schedules your appointment.</p>';
+                        @send_branded_email($meRes['email'], 'Request Received', 'Request Received', $content);
                     }
                 } else {
                     $error_message = "Submission failed. Please try again later.";
