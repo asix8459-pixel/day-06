@@ -16,7 +16,7 @@ if (!$id || $start===''){ http_response_code(400); echo json_encode(['success'=>
 try{ $dt=new DateTime($start); } catch(Exception $e){ http_response_code(400); echo json_encode(['success'=>false,'message'=>'Invalid date']); exit; }
 $date=$dt->format('Y-m-d H:i:s');
 // Business hours check
-if (!guidance_is_within_business_hours(new DateTime($date))) { echo json_encode(['success'=>false,'message'=>'Outside business hours (Mon–Fri, 08:00–17:00).']); exit; }
+if (!guidance_is_within_business_hours(new DateTime($date)) || guidance_is_blackout($conn, new DateTime($date))) { echo json_encode(['success'=>false,'message'=>'Outside business hours or on a blackout day.']); exit; }
 // Permission: allow admin or owning counselor only
 $own = $conn->prepare("SELECT user_id FROM appointments WHERE id = ?");
 $own->bind_param('i', $id);

@@ -34,6 +34,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $error_message = "Invalid date/time format.";
                 $appointment_date = null;
             }
+            // Blackout days hint on server
+            if (!isset($error_message) && function_exists('guidance_is_blackout')) {
+                include_once 'guidance_availability.php';
+                if (guidance_is_blackout($conn, new DateTime($appointment_date))) {
+                    $error_message = "Selected date falls on a blackout day. Please choose another date.";
+                    $appointment_date = null;
+                }
+            }
             // Pick a guidance admin/counselor to assign
             $guidance_admin_id = null;
             $sel = $conn->prepare("SELECT user_id FROM users WHERE role = 'Guidance Admin' AND status = 'Active' LIMIT 1");

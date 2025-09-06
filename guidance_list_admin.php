@@ -10,13 +10,18 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['Guidanc
 
 // Fetch guidance requests for the logged-in admin/counselor
 $user_id = $_SESSION['user_id'];
-$query = "SELECT appointments.*, students.first_name AS student_first_name, students.last_name AS student_last_name
+$baseQuery = "SELECT appointments.*, students.first_name AS student_first_name, students.last_name AS student_last_name
           FROM appointments
           JOIN users AS students ON appointments.student_id = students.user_id
-          WHERE appointments.user_id = ?
-          ORDER BY COALESCE(appointments.appointment_date, appointments.id) DESC";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("s", $user_id);
+          WHERE appointments.user_id = ?";
+$params = [$user_id];
+$types = 's';
+if (!empty($_GET['status'])) { $baseQuery .= " AND LOWER(appointments.status) = ?"; $params[] = strtolower($_GET['status']); $types .= 's'; }
+if (!empty($_GET['from'])) { $baseQuery .= " AND DATE(appointments.appointment_date) >= ?"; $params[] = $_GET['from']; $types .= 's'; }
+if (!empty($_GET['to'])) { $baseQuery .= " AND DATE(appointments.appointment_date) <= ?"; $params[] = $_GET['to']; $types .= 's'; }
+$baseQuery .= " ORDER BY COALESCE(appointments.appointment_date, appointments.id) DESC";
+$stmt = $conn->prepare($baseQuery);
+@$stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -130,6 +135,30 @@ if (!isset($_SESSION['csrf_token'])) {
     <?php include 'guidance_admin_header.php'; ?>
     <div class="main-content">
         <h2>Guidance Requests</h2>
+        <form method="GET" class="filters" style="display:flex; gap:12px; align-items:end; margin:10px 0;">
+            <div>
+                <label>Status</label><br>
+                <select name="status" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;">
+                    <option value="">All</option>
+                    <option value="pending" <?= isset($_GET['status']) && $_GET['status']==='pending'?'selected':'' ?>>Pending</option>
+                    <option value="approved" <?= isset($_GET['status']) && $_GET['status']==='approved'?'selected':'' ?>>Approved</option>
+                    <option value="completed" <?= isset($_GET['status']) && $_GET['status']==='completed'?'selected':'' ?>>Completed</option>
+                    <option value="rejected" <?= isset($_GET['status']) && $_GET['status']==='rejected'?'selected':'' ?>>Rejected</option>
+                    <option value="cancelled" <?= isset($_GET['status']) && $_GET['status']==='cancelled'?'selected':'' ?>>Cancelled</option>
+                </select>
+            </div>
+            <div>
+                <label>Date From</label><br>
+                <input type="date" name="from" value="<?= htmlspecialchars($_GET['from'] ?? '') ?>" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;">
+            </div>
+            <div>
+                <label>Date To</label><br>
+                <input type="date" name="to" value="<?= htmlspecialchars($_GET['to'] ?? '') ?>" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;">
+            </div>
+            <div>
+                <button type="submit" style="background:#0d6efd; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer;">Filter</button>
+            </div>
+        </form>
         <?php
         $resReqs = [];
         $conn->query("CREATE TABLE IF NOT EXISTS reschedule_requests (id INT AUTO_INCREMENT PRIMARY KEY, appointment_id INT NOT NULL, student_id VARCHAR(64) NOT NULL, requested_datetime DATETIME NOT NULL, note TEXT NULL, status VARCHAR(16) NOT NULL DEFAULT 'open', created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, INDEX(appointment_id), INDEX(status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");

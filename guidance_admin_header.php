@@ -175,6 +175,11 @@ try {
             <i class="bi bi-megaphone"></i> Announcements
         </a>
         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'Guidance Admin'): ?>
+        <a href="guidance_blackouts_admin.php" class="menu-item" id="blackouts">
+            <i class="bi bi-cloud-slash"></i> Blackout Dates
+        </a>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'Guidance Admin'): ?>
         <a href="smtp_test.php" class="menu-item" id="smtp-test">
             <i class="bi bi-envelope"></i> SMTP Test
         </a>

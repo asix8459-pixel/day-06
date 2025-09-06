@@ -19,7 +19,7 @@ $startStr = $dt->format('Y-m-d H:i:00');
 $endStr = $dt->modify('+1 hour')->format('Y-m-d H:i:00');
 
 // Business hours check
-if (!guidance_is_within_business_hours(new DateTime($startStr))) {
+if (!guidance_is_within_business_hours(new DateTime($startStr)) || guidance_is_blackout($conn, new DateTime($startStr))) {
   echo json_encode(['success'=>false,'message'=>'Outside business hours (Mon–Fri, 08:00–17:00).']);
   exit;
 }

@@ -19,8 +19,8 @@ try{ $dt=new DateTime($datetime); } catch(Exception $e){ http_response_code(400)
 $at = $dt->format('Y-m-d H:i:00');
 
 // Business hours check
-if (!guidance_is_within_business_hours(new DateTime($at))) {
-  echo json_encode(['success'=>false,'message'=>'Outside business hours (Mon–Fri, 08:00–17:00).']);
+if (!guidance_is_within_business_hours(new DateTime($at)) || guidance_is_blackout($conn, new DateTime($at))) {
+  echo json_encode(['success'=>false,'message'=>'Outside business hours or on a blackout day.']);
   exit;
 }
 // Permission: allow admin or owning counselor only
