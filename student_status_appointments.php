@@ -2,7 +2,7 @@
 include 'config.php'; 
 include 'csrf.php';
 include 'mailer.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
