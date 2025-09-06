@@ -1,3 +1,21 @@
+<?php
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
+include_once 'config.php';
+$pendingCount = 0;
+try {
+    if (isset($_SESSION['role']) && in_array($_SESSION['role'], ['Guidance Admin','Counselor'], true)) {
+        if ($_SESSION['role'] === 'Guidance Admin') {
+            $q = $conn->query("SELECT COUNT(*) AS c FROM appointments WHERE status IN ('pending','Pending')");
+            $pendingCount = (int)($q->fetch_assoc()['c'] ?? 0);
+        } else {
+            $me = $_SESSION['user_id'] ?? '';
+            $st = $conn->prepare("SELECT COUNT(*) AS c FROM appointments WHERE user_id=? AND status IN ('pending','Pending')");
+            $st->bind_param('s', $me);
+            $st->execute(); $pendingCount = (int)($st->get_result()->fetch_assoc()['c'] ?? 0);
+        }
+    }
+} catch (Throwable $e) { /* ignore header count errors */ }
+?>
 <!-- Sidebar Navigation for Guidance Admin -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <style>
@@ -67,6 +85,19 @@
         font-size: 1.2rem;
         color: inherit;
     }
+    .notif-badge {
+        display:inline-block;
+        min-width: 22px;
+        padding: 2px 6px;
+        margin-left: auto;
+        background: #FFD700;
+        color: #003366;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.4;
+        text-align: center;
+    }
     .logout-btn {
         text-decoration: none;
         color: white;
@@ -130,6 +161,9 @@
         </a>
         <a href="guidance_list_admin.php" class="menu-item" id="guidance-requests">
             <i class="bi bi-journal-text"></i> Guidance Requests
+            <?php if ($pendingCount > 0): ?>
+            <span class="notif-badge" title="Pending requests"><?= htmlspecialchars((string)$pendingCount) ?></span>
+            <?php endif; ?>
         </a>
         <a href="guidance_calendar_admin.php" class="menu-item" id="guidance-calendar">
             <i class="bi bi-calendar3"></i> Calendar
