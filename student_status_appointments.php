@@ -122,8 +122,26 @@ $result = $stmt->get_result();
                                 </form>
                             <?php endif; ?>
                             <?php if (in_array(strtolower($row['status']), ['approved','completed'], true) && !empty($row['appointment_date'])): ?>
-                                <?php $ics = ics_download_link((int)$row['id'], $row['appointment_date']); ?>
-                                <a href="<?= htmlspecialchars($ics) ?>" style="background:#0d6efd; color:#fff; padding:6px 10px; border-radius:4px; text-decoration:none;">Add to Calendar</a>
+                                <?php
+                                    $ics = ics_download_link((int)$row['id'], $row['appointment_date']);
+                                    try {
+                                        $dt = new DateTime($row['appointment_date']);
+                                        $dtUtc = clone $dt; $dtUtc->setTimezone(new DateTimeZone('UTC'));
+                                        $startUtc = $dtUtc->format('Ymd\THis\Z');
+                                        $endUtc = (clone $dtUtc)->modify('+1 hour')->format('Ymd\THis\Z');
+                                    } catch (Exception $e) {
+                                        $startUtc = $endUtc = '';
+                                    }
+                                    $title = 'Guidance Appointment';
+                                    $details = 'Reason: '.($row['reason'] ?? '');
+                                    $gcal = $startUtc && $endUtc
+                                      ? 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='.rawurlencode($title).'&dates='.$startUtc.'/'.$endUtc.'&details='.rawurlencode($details)
+                                      : '';
+                                ?>
+                                <a href="<?= htmlspecialchars($ics) ?>" title="Download .ics file for Outlook/Apple/Google" style="background:#0d6efd; color:#fff; padding:6px 10px; border-radius:4px; text-decoration:none;">Add to Calendar (.ics)</a>
+                                <?php if ($gcal): ?>
+                                <a href="<?= htmlspecialchars($gcal) ?>" target="_blank" rel="noopener" style="background:#198754; color:#fff; padding:6px 10px; border-radius:4px; text-decoration:none;">Google Calendar</a>
+                                <?php endif; ?>
                             <?php endif; ?>
                             <?php if (!in_array(strtolower($row['status']), ['pending','approved'], true) && !(in_array(strtolower($row['status']), ['approved','completed'], true) && !empty($row['appointment_date']))): ?>
                                 —
