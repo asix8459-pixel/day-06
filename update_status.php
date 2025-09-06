@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERROR<?php
+<?php
 include 'config.php';
 include 'csrf.php';
 
