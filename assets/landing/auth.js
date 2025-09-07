@@ -43,6 +43,30 @@ var AuthUI=(function(){
         e.preventDefault(); window.location.href = 'register.php';
       });
     }
+
+    // Show/Hide password toggles
+    Array.prototype.forEach.call(document.querySelectorAll('[data-eye]'), function(btn){
+      btn.addEventListener('click', function(){
+        var target = document.getElementById(btn.getAttribute('data-eye'));
+        if (!target) return;
+        target.type = target.type === 'password' ? 'text' : 'password';
+        btn.classList.toggle('fa-eye-slash');
+      });
+    });
+
+    // Ripple effect on buttons
+    Array.prototype.forEach.call(document.querySelectorAll('.auth-btn, .auth-btn-alt'), function(b){
+      b.addEventListener('click', function(e){
+        var circle = document.createElement('span');
+        var d = Math.max(b.clientWidth, b.clientHeight);
+        circle.style.width = circle.style.height = d + 'px';
+        circle.style.left = (e.clientX - b.getBoundingClientRect().left - d/2) + 'px';
+        circle.style.top = (e.clientY - b.getBoundingClientRect().top - d/2) + 'px';
+        circle.classList.add('ripple');
+        b.appendChild(circle);
+        setTimeout(function(){ circle.remove(); }, 600);
+      });
+    });
   }
   return { init:init, open:open, close:close };
 })();

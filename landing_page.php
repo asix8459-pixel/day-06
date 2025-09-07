@@ -230,6 +230,10 @@ require_once __DIR__ . '/csrf.php';
     </style>
     <!-- Auth Split Overlay -->
     <div class="auth-overlay" id="authOverlay" aria-hidden="true">
+        <div class="auth-bg" aria-hidden="true">
+            <div class="auth-blob b1"></div>
+            <div class="auth-blob b2"></div>
+        </div>
         <div class="auth-card" id="authCard" role="dialog" aria-modal="true" aria-labelledby="authTitle">
             <button class="auth-close auth-switch" id="authClose" aria-label="Close">×</button>
             <!-- Left: Sign In -->
@@ -240,7 +244,10 @@ require_once __DIR__ . '/csrf.php';
                     <form class="auth-form" method="POST" action="login.php">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
                         <input class="auth-input" type="text" name="user_id" placeholder="User ID" required aria-label="User ID">
-                        <input class="auth-input" type="password" name="password" placeholder="Password" required aria-label="Password">
+                        <div class="auth-input-wrap">
+                            <input class="auth-input" type="password" id="loginPwd" name="password" placeholder="Password" required aria-label="Password">
+                            <button type="button" class="auth-eye fa-solid fa-eye" data-eye="loginPwd" aria-label="Show password"></button>
+                        </div>
                         <button class="auth-btn" type="submit">Sign In</button>
                         <div class="auth-socials" aria-label="Social login">
                             <a href="#" aria-label="Sign in with Google"><i class="fa-brands fa-google"></i></a>
@@ -260,7 +267,10 @@ require_once __DIR__ . '/csrf.php';
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
                         <input class="auth-input" type="text" name="first_name" placeholder="First Name" required aria-label="First Name">
                         <input class="auth-input" type="email" name="email" placeholder="Email" required aria-label="Email">
-                        <input class="auth-input" type="password" name="password" placeholder="Password" required aria-label="Password">
+                        <div class="auth-input-wrap">
+                            <input class="auth-input" type="password" id="regPwd" name="password" placeholder="Password" required aria-label="Password">
+                            <button type="button" class="auth-eye fa-solid fa-eye" data-eye="regPwd" aria-label="Show password"></button>
+                        </div>
                         <button class="auth-btn auth-btn-alt" type="submit">Sign Up</button>
                         <div class="auth-socials" aria-label="Social register">
                             <a href="#" aria-label="Sign up with Google"><i class="fa-brands fa-google"></i></a>
