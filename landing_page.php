@@ -213,7 +213,8 @@ $result = $conn->query($sql);
             <li><a href="#">Home</a></li>
             <li><a href="#about">About</a></li>
             <li><a href="#services">Services</a></li>
-            <li><a href="login.php">Login</a></li>
+            <li><a href="#" id="openLogin">Login</a></li>
+            <li><a href="#" id="openRegister">Register</a></li>
         </ul>
     </div>
   
@@ -260,6 +261,30 @@ $result = $conn->query($sql);
         <p>&copy; 2025 NEUST Gabaldon. All Rights Reserved.</p>
     </div>
     
+    <!-- Overlay Modals -->
+    <style>
+        .overlay-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 1050; }
+        .overlay-modal { width: 90%; max-width: 980px; height: 85vh; background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.35); overflow: hidden; position: relative; }
+        .overlay-header { position: absolute; top: 0; left: 0; right: 0; height: 50px; background: rgb(2, 31, 61); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+        .overlay-title { font-weight: 700; }
+        .overlay-close { background: transparent; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+        .overlay-body { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; }
+        .overlay-body iframe { width: 100%; height: 100%; border: 0; }
+        @media (max-width: 768px){ .overlay-modal{ width: 96%; height: 90vh; } }
+    </style>
+    <div class="overlay-backdrop" id="loginOverlay" aria-hidden="true">
+        <div class="overlay-modal" role="dialog" aria-modal="true" aria-labelledby="loginOverlayTitle">
+            <div class="overlay-header"><span id="loginOverlayTitle" class="overlay-title">Login</span><button class="overlay-close" data-close="loginOverlay" aria-label="Close">×</button></div>
+            <div class="overlay-body"><iframe id="loginFrame" src="about:blank"></iframe></div>
+        </div>
+    </div>
+    <div class="overlay-backdrop" id="registerOverlay" aria-hidden="true">
+        <div class="overlay-modal" role="dialog" aria-modal="true" aria-labelledby="registerOverlayTitle">
+            <div class="overlay-header"><span id="registerOverlayTitle" class="overlay-title">Register</span><button class="overlay-close" data-close="registerOverlay" aria-label="Close">×</button></div>
+            <div class="overlay-body"><iframe id="registerFrame" src="about:blank"></iframe></div>
+        </div>
+    </div>
+    
     <script>
         $(document).ready(function(){
             $('.slideshow-container').slick({
@@ -270,6 +295,36 @@ $result = $conn->query($sql);
                 autoplaySpeed: 3000,
                 prevArrow: '<button class="slick-prev">&#10094;</button>',
                 nextArrow: '<button class="slick-next">&#10095;</button>'
+            });
+            function openOverlay(id, src){
+                const $overlay = $('#'+id);
+                $overlay.css('display','flex');
+                if (src) {
+                    const $frame = $overlay.find('iframe');
+                    if ($frame.attr('src') !== src) $frame.attr('src', src);
+                }
+                $('body').css('overflow','hidden');
+            }
+            function closeOverlay(id){
+                const $overlay = $('#'+id);
+                $overlay.hide();
+                $('body').css('overflow','auto');
+            }
+            $('#openLogin').on('click', function(e){ e.preventDefault(); openOverlay('loginOverlay', 'login.php'); });
+            $('#openRegister').on('click', function(e){ e.preventDefault(); openOverlay('registerOverlay', 'register.php'); });
+            $('[data-close]').on('click', function(){ closeOverlay($(this).data('close')); });
+            $(document).on('keydown', function(e){ if (e.key === 'Escape'){ closeOverlay('loginOverlay'); closeOverlay('registerOverlay'); }});
+            // bubble iframe redirects to top-level when logged in
+            const dashboards = [
+                'admin_dashboard.php','student_dashboard.php','faculty_dashboard.php','scholarship_admin_dashboard.php','guidance_admin_dashboard.php','admin_dormitory_dashboard.php','registrar_dashboard.php'
+            ];
+            $('#loginFrame').on('load', function(){
+                try {
+                    const href = this.contentWindow.location.href;
+                    for (const page of dashboards){
+                        if (href.indexOf(page) !== -1){ window.location.href = href; return; }
+                    }
+                } catch(err) {}
             });
         });
     </script>
