@@ -170,6 +170,7 @@ if (!isset($_SESSION['csrf_token'])) {
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="completed">Completed</option>
+                        <option value="no-show">No-show</option>
                         <option value="rejected">Rejected</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
