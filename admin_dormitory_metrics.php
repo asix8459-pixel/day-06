@@ -16,7 +16,8 @@ $metrics = [
     'recent'=>[],
     'pendingPayments'=>0,
     'verifiedThisMonth'=>0.0,
-    'paymentsByDay'=>[]
+    'paymentsByDay'=>[],
+    'monthLabel'=> date('M Y')
 ];
 
 // Counts
@@ -56,17 +57,34 @@ if ($recent) {
     }
 }
 
-// Payments: pending count and verified sum for current month
+// Payments: month handling
+$monthParam = $_GET['month'] ?? '';
+if (preg_match('/^\d{4}-\d{2}$/', $monthParam)) {
+    $year = (int)substr($monthParam, 0, 4);
+    $month = (int)substr($monthParam, 5, 2);
+} else {
+    $year = (int)date('Y');
+    $month = (int)date('m');
+}
+$metrics['monthLabel'] = date('M Y', strtotime(sprintf('%04d-%02d-01', $year, $month)));
+
 $pp = $conn->query("SELECT COUNT(*) AS c FROM payments WHERE status='Pending'");
 $metrics['pendingPayments'] = $pp ? (int)($pp->fetch_assoc()['c'] ?? 0) : 0;
-$vm = $conn->query("SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE status='Verified' AND YEAR(submitted_at)=YEAR(CURDATE()) AND MONTH(submitted_at)=MONTH(CURDATE())");
+
+$vm = $conn->query("SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE status='Verified' AND YEAR(submitted_at)=$year AND MONTH(submitted_at)=$month");
 $metrics['verifiedThisMonth'] = $vm ? (float)($vm->fetch_assoc()['s'] ?? 0.0) : 0.0;
 
-// Payments by day (last 7 days, verified sums)
+// Payments by day for the selected month
+$start = sprintf('%04d-%02d-01', $year, $month);
+$end = date('Y-m-t', strtotime($start));
 $pmap = [];
-$pq = $conn->query("SELECT DATE(submitted_at) AS d, COALESCE(SUM(amount),0) AS s FROM payments WHERE status='Verified' AND submitted_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(submitted_at)");
+$pq = $conn->query("SELECT DATE(submitted_at) AS d, COALESCE(SUM(amount),0) AS s FROM payments WHERE status='Verified' AND submitted_at BETWEEN '$start' AND '$end' GROUP BY DATE(submitted_at)");
 if ($pq) { while($r=$pq->fetch_assoc()){ $pmap[$r['d']] = (float)$r['s']; } }
-foreach ($days as $d) { $metrics['paymentsByDay'][] = ['d'=>$d, 's'=>round($pmap[$d] ?? 0.0, 2)]; }
+$daysMonth = (int)date('t', strtotime($start));
+for ($d=1; $d<=$daysMonth; $d++) {
+    $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $d);
+    $metrics['paymentsByDay'][] = ['d'=>$dateStr, 's'=>round($pmap[$dateStr] ?? 0.0, 2)];
+}
 
 echo json_encode(['success'=>true,'data'=>$metrics]);
 ?>

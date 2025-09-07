@@ -101,7 +101,7 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
             <h2><i class="fa-solid fa-building-columns"></i> Dormitory Admin Dashboard</h2>
             <p>Monitor room capacity, applications, payments, and operations at a glance.</p>
         </div>
-        <div class="grid">
+        <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(200px,1fr));">
             <div class="stat" onclick="navigateTo('dormitory_manage_applications.php')">
                 <div class="ic ic-pending"><i class="fa-solid fa-hourglass-half"></i></div>
                 <div class="txt"><div class="k" id="mPending"><?= $pendingCount ?></div><div class="l">Pending Applications</div></div>
@@ -139,22 +139,28 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
             </div>
         </div>
         <div class="card-glass" style="margin-top:14px;">
-            <h5 style="margin:0 0 8px; color:#fff;">Recent Applications</h5>
-            <table>
-                <thead><tr><th>ID</th><th>Student</th><th>Room</th><th>Status</th><th>Applied</th></tr></thead>
-                <tbody id="recentApps"></tbody>
-            </table>
-        </div>
-        <div class="card-glass" style="margin-top:14px;">
-            <h5 style="margin:0 0 8px; color:#fff;">Payments Summary</h5>
-            <div class="d-flex flex-wrap gap-3 align-items-center">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 style="margin:0 0 8px; color:#fff;">Payments Summary</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="payMonth" class="form-label mb-0" style="color:#cbd5e1; font-size:12px;">Month</label>
+                    <input type="month" id="payMonth" class="form-control form-control-sm" style="border-radius:8px; background:rgba(255,255,255,.9);" value="<?= date('Y-m') ?>">
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-3 align-items-center mt-2">
                 <div><strong>Pending:</strong> <span id="sumPendingPay"><?= $pendingPayments ?></span></div>
-                <div><strong>Verified (<?= date('M Y') ?>):</strong> <span id="sumVerifiedMonth">₱<?= number_format($verifiedThisMonth, 2) ?></span></div>
+                <div><strong><span id="sumMonthLabel"><?= date('M Y') ?></span> Verified:</strong> <span id="sumVerifiedMonth">₱<?= number_format($verifiedThisMonth, 2) ?></span></div>
                 <a class="btn btn-sm btn-light" href="admin_dorm_payments.php"><i class="fa-solid fa-arrow-right"></i> Manage Payments</a>
             </div>
             <div class="chart-box" style="height:220px; margin-top:10px;">
                 <canvas id="paySpark"></canvas>
             </div>
+        </div>
+        <div class="card-glass" style="margin-top:14px;">
+            <h5 style="margin:0 0 8px; color:#fff;">Recent Applications</h5>
+            <table>
+                <thead><tr><th>ID</th><th>Student</th><th>Room</th><th>Status</th><th>Applied</th></tr></thead>
+                <tbody id="recentApps"></tbody>
+            </table>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -171,12 +177,14 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
         });
         const paySpark = new Chart(document.getElementById('paySpark'), {
             type:'line',
-            data:{ labels:[<?php echo implode(',', array_map(fn($x)=>'"'.date('M d', strtotime($x['d'])).'"', $appsByDay)); ?>], datasets:[{ label:'Verified ₱', data:[<?php echo implode(',', array_map(fn($x)=>0, $appsByDay)); ?>], fill:true, tension:.35, borderColor:'#40c057', backgroundColor:'rgba(64,192,87,.18)', pointRadius:2.5, pointBackgroundColor:'#40c057' }] },
+            data:{ labels:[], datasets:[{ label:'Verified ₱', data:[], fill:true, tension:.35, borderColor:'#40c057', backgroundColor:'rgba(64,192,87,.18)', pointRadius:2.5, pointBackgroundColor:'#40c057' }] },
             options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{ x:{ ticks:{color:'#cbd5e1'}}, y:{ ticks:{color:'#cbd5e1'} } } }
         });
-        async function refreshMetrics(){
+        async function refreshMetrics(month){
             try{
-                const r = await fetch('admin_dormitory_metrics.php');
+                const url = new URL('admin_dormitory_metrics.php', window.location.href);
+                if (month) url.searchParams.set('month', month);
+                const r = await fetch(url.toString());
                 const j = await r.json();
                 if (!j.success) return;
                 const d = j.data;
@@ -188,6 +196,7 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
                 // payments
                 document.getElementById('sumPendingPay').textContent = d.pendingPayments;
                 document.getElementById('sumVerifiedMonth').textContent = '₱' + (d.verifiedThisMonth.toFixed(2));
+                document.getElementById('sumMonthLabel').textContent = d.monthLabel;
                 paySpark.data.labels = d.paymentsByDay.map(x=> new Date(x.d).toLocaleDateString(undefined,{month:'short',day:'2-digit'}));
                 paySpark.data.datasets[0].data = d.paymentsByDay.map(x=> x.s);
                 paySpark.update('none');
@@ -199,7 +208,10 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
         const mOccupied = document.getElementById('mOccupied');
         const mAvailable = document.getElementById('mAvailable');
         const recentApps = document.getElementById('recentApps');
-        refreshMetrics(); setInterval(refreshMetrics, 60000);
+        const payMonth = document.getElementById('payMonth');
+        refreshMetrics(payMonth.value);
+        setInterval(()=>refreshMetrics(payMonth.value), 60000);
+        payMonth.addEventListener('change', ()=> refreshMetrics(payMonth.value));
     </script>
 </body>
 </html>
