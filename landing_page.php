@@ -239,6 +239,10 @@ require_once __DIR__ . '/csrf.php';
             <!-- Left: Sign In -->
             <div class="auth-side auth-left">
                 <div id="authPaneLogin" class="auth-pane visible">
+                    <div class="auth-brand">
+                        <img src="assets/logo.png" alt="NEUST" class="auth-logo small" loading="lazy">
+                        <strong>NEUST</strong>
+                    </div>
                     <h3 class="auth-title" id="authTitle">Welcome Back!</h3>
                     <div class="auth-sub">Sign in to continue</div>
                     <form class="auth-form" method="POST" action="login.php">
@@ -261,6 +265,7 @@ require_once __DIR__ . '/csrf.php';
             <!-- Right: Sign Up -->
             <div class="auth-side auth-right">
                 <div id="authPaneRegister" class="auth-pane hidden">
+                    <img src="assets/logo.png" alt="NEUST Logo" class="auth-logo" loading="lazy">
                     <h3 class="auth-title">Create Account</h3>
                     <div class="auth-sub">Join and get started</div>
                     <form class="auth-form" method="POST" action="register.php" id="registerLite">

@@ -22,6 +22,10 @@
 .auth-right{background:#fff}
 .auth-title{font-weight:900; font-size:28px; margin:0 0 6px}
 .auth-sub{opacity:.9; margin:0 0 16px}
+.auth-logo{width:56px; height:56px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,.18); margin:0 0 10px; animation:bob 6s ease-in-out infinite}
+.auth-logo.small{width:48px; height:48px}
+.auth-brand{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+@keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)}}
 .auth-form{display:grid; gap:10px}
 .auth-input{padding:12px 12px; border:1px solid rgba(0,0,0,.12); border-radius:10px; font-size:15px}
 .auth-input:focus{outline:0; box-shadow:0 0 0 4px rgba(107,33,168,.16); border-color:#7c3aed}
