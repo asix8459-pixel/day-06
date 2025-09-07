@@ -63,7 +63,8 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
         .stat .txt .k{font-weight:900;font-size:22px}
         .stat .txt .l{font-size:11px;color:#cbd5e1;text-transform:uppercase;letter-spacing:.8px}
         .card-glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;box-shadow:0 14px 44px rgba(2,32,71,.4);backdrop-filter:blur(8px) saturate(120%);color:#e2e8f0}
-        .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:14px}
+        .charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+        .chart-box{position:relative;height:280px}
         table{width:100%;border-collapse:collapse}
         thead th{position:sticky;top:0;background:rgba(255,255,255,.08);color:#cbd5e1;font-weight:700;padding:10px;border-bottom:1px solid rgba(255,255,255,.12)}
         tbody td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);color:#e2e8f0}
@@ -120,11 +121,11 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
         <div class="charts">
             <div class="card-glass">
                 <h5 style="margin:0 0 8px; color:#fff;">Applications by Status</h5>
-                <canvas id="statusDonut" height="180"></canvas>
+                <div class="chart-box"><canvas id="statusDonut"></canvas></div>
             </div>
             <div class="card-glass">
                 <h5 style="margin:0 0 8px; color:#fff;">Applications (Last 7 days)</h5>
-                <canvas id="appsLine" height="180"></canvas>
+                <div class="chart-box"><canvas id="appsLine"></canvas></div>
             </div>
         </div>
         <div class="card-glass" style="margin-top:14px;">
@@ -140,36 +141,33 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
         const donut = new Chart(document.getElementById('statusDonut'), {
             type:'doughnut',
             data:{ labels:['Pending','Approved','Rejected'], datasets:[{ data:[<?= (int)$statusDist['Pending'] ?>,<?= (int)$statusDist['Approved'] ?>,<?= (int)$statusDist['Rejected'] ?>], backgroundColor:['#ffcd39','#38d9a9','#ff6b6b'], borderWidth:0 }] },
-            options:{ plugins:{legend:{labels:{color:'#e2e8f0'}}}, cutout:'70%'}
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#e2e8f0'}}}, cutout:'70%'}
         });
         const line = new Chart(document.getElementById('appsLine'), {
             type:'line',
             data:{ labels:[<?php echo implode(',', array_map(fn($x)=>'"'.date('M d', strtotime($x['d'])).'"', $appsByDay)); ?>], datasets:[{ label:'Apps', data:[<?php echo implode(',', array_map(fn($x)=>$x['c'], $appsByDay)); ?>], fill:true, tension:.35, borderColor:'#74c0fc', backgroundColor:'rgba(116,192,252,.18)', pointRadius:2.5, pointBackgroundColor:'#74c0fc' }] },
-            options:{ plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{ x:{ ticks:{color:'#cbd5e1'}}, y:{ ticks:{color:'#cbd5e1'} } } }
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{ x:{ ticks:{color:'#cbd5e1'}}, y:{ ticks:{color:'#cbd5e1'} } } }
         });
-        // Live auto-refresh (60s)
         async function refreshMetrics(){
             try{
                 const r = await fetch('admin_dormitory_metrics.php');
                 const j = await r.json();
                 if (!j.success) return;
                 const d = j.data;
-                document.getElementById('mPending').textContent = d.pending;
-                document.getElementById('mApproved').textContent = d.approved;
-                document.getElementById('mRejected').textContent = d.rejected;
-                document.getElementById('mOccupied').textContent = d.occupiedBeds;
-                document.getElementById('mAvailable').textContent = d.availableBeds;
-                donut.data.datasets[0].data = [d.statusDist.Pending, d.statusDist.Approved, d.statusDist.Rejected];
-                donut.update('none');
+                mPending.textContent = d.pending; mApproved.textContent = d.approved; mRejected.textContent = d.rejected; mOccupied.textContent = d.occupiedBeds; mAvailable.textContent = d.availableBeds;
+                donut.data.datasets[0].data = [d.statusDist.Pending, d.statusDist.Approved, d.statusDist.Rejected]; donut.update('none');
                 line.data.labels = d.appsByDay.map(x=> new Date(x.d).toLocaleDateString(undefined,{month:'short',day:'2-digit'}));
-                line.data.datasets[0].data = d.appsByDay.map(x=> x.c);
-                line.update('none');
-                const tbody = document.getElementById('recentApps');
-                tbody.innerHTML = d.recent.map(r=> `<tr><td>${r.id}</td><td>${r.student}</td><td>${r.room}</td><td>${r.status}</td><td>${new Date(r.applied_at).toLocaleString()}</td></tr>`).join('');
-            }catch(e){/* ignore */}
+                line.data.datasets[0].data = d.appsByDay.map(x=> x.c); line.update('none');
+                recentApps.innerHTML = d.recent.map(r=> `<tr><td>${r.id}</td><td>${r.student}</td><td>${r.room}</td><td>${r.status}</td><td>${new Date(r.applied_at).toLocaleString()}</td></tr>`).join('');
+            }catch(e){}
         }
-        refreshMetrics();
-        setInterval(refreshMetrics, 60000);
+        const mPending = document.getElementById('mPending');
+        const mApproved = document.getElementById('mApproved');
+        const mRejected = document.getElementById('mRejected');
+        const mOccupied = document.getElementById('mOccupied');
+        const mAvailable = document.getElementById('mAvailable');
+        const recentApps = document.getElementById('recentApps');
+        refreshMetrics(); setInterval(refreshMetrics, 60000);
     </script>
 </body>
 </html>
