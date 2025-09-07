@@ -28,6 +28,10 @@ $map = [];
 $q2 = $conn->query("SELECT DATE(applied_at) AS d, COUNT(*) AS c FROM student_room_applications WHERE applied_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(applied_at)");
 if ($q2) { while($r=$q2->fetch_assoc()){ $map[$r['d']] = (int)$r['c']; } }
 foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
+
+// Payments summary
+$pendingPayments = (int)($conn->query("SELECT COUNT(*) AS c FROM payments WHERE status='Pending'")->fetch_assoc()['c'] ?? 0);
+$verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE status='Verified' AND YEAR(submitted_at)=YEAR(CURDATE()) AND MONTH(submitted_at)=MONTH(CURDATE())")->fetch_assoc()['s'] ?? 0.0);
 ?>
 
 <!DOCTYPE html>
@@ -59,6 +63,7 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
         .ic-rejected{background:linear-gradient(135deg,#e03131,#ff6b6b)}
         .ic-occupied{background:linear-gradient(135deg,#845ef7,#b197fc)}
         .ic-available{background:linear-gradient(135deg,#0d6efd,#74c0fc)}
+        .ic-payments{background:linear-gradient(135deg,#0ca678,#40c057)}
         .stat .txt{color:#e2e8f0}
         .stat .txt .k{font-weight:900;font-size:22px}
         .stat .txt .l{font-size:11px;color:#cbd5e1;text-transform:uppercase;letter-spacing:.8px}
@@ -86,6 +91,7 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
             <a href="dormitory_manage_applications.php"><i class="fas fa-file-alt"></i> Room Applications</a>
             <a href="dormitory_room_management.php"><i class="fas fa-users"></i> View Boarders</a>
             <a href="admin_manage_dorm_agreements.php"><i class="fas fa-file-signature"></i> Agreements</a>
+            <a href="admin_dorm_payments.php"><i class="fas fa-money-bill-wave"></i> Payments</a>
         </div>
         <a href="#" class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
@@ -93,7 +99,7 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
     <div class="main-content">
         <div class="hero">
             <h2><i class="fa-solid fa-building-columns"></i> Dormitory Admin Dashboard</h2>
-            <p>Monitor room capacity, applications, and operations at a glance.</p>
+            <p>Monitor room capacity, applications, payments, and operations at a glance.</p>
         </div>
         <div class="grid">
             <div class="stat" onclick="navigateTo('dormitory_manage_applications.php')">
@@ -116,6 +122,10 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
                 <div class="ic ic-available"><i class="fa-solid fa-door-open"></i></div>
                 <div class="txt"><div class="k" id="mAvailable"><?= $availableBeds ?></div><div class="l">Available Beds</div></div>
             </div>
+            <div class="stat" onclick="navigateTo('admin_dorm_payments.php')">
+                <div class="ic ic-payments"><i class="fa-solid fa-money-bill-wave"></i></div>
+                <div class="txt"><div class="k" id="mPayPending"><?= $pendingPayments ?></div><div class="l">Pending Payments</div></div>
+            </div>
         </div>
 
         <div class="charts">
@@ -134,6 +144,14 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
                 <thead><tr><th>ID</th><th>Student</th><th>Room</th><th>Status</th><th>Applied</th></tr></thead>
                 <tbody id="recentApps"></tbody>
             </table>
+        </div>
+        <div class="card-glass" style="margin-top:14px;">
+            <h5 style="margin:0 0 8px; color:#fff;">Payments Summary</h5>
+            <div class="d-flex flex-wrap gap-3">
+                <div><strong>Pending:</strong> <span id="sumPendingPay"><?= $pendingPayments ?></span></div>
+                <div><strong>Verified (<?= date('M Y') ?>):</strong> <span id="sumVerifiedMonth">₱<?= number_format($verifiedThisMonth, 2) ?></span></div>
+                <a class="btn btn-sm btn-light" href="admin_dorm_payments.php"><i class="fa-solid fa-arrow-right"></i> Manage Payments</a>
+            </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
