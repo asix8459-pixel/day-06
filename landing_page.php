@@ -22,8 +22,9 @@ $result = $conn->query($sql);
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <!-- Minimal carousel (Splide) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+    <!-- Slick Carousel CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
     <!-- Landing CSS -->
     <link rel="stylesheet" href="assets/css/landing.css">
     <style>
@@ -245,8 +246,6 @@ $result = $conn->query($sql);
             <div class="nav-links" role="navigation" aria-label="Primary">
                 <a href="#features">Features</a>
                 <a href="#announcements">Announcements</a>
-                <a href="#how">How it works</a>
-                <a href="#testimonials">Testimonials</a>
                 <button id="modeToggle" class="mode-toggle" aria-label="Toggle dark mode"><i class="fa-regular fa-moon"></i></button>
                 <a href="#" id="openLogin" class="btn btn-ghost" aria-haspopup="dialog">Login</a>
                 <a href="#" id="openRegister" class="btn btn-primary" aria-haspopup="dialog">Register</a>
@@ -287,26 +286,20 @@ $result = $conn->query($sql);
         </div>
     </section>
 
-    <!-- Announcements preview (carousel) -->
+    <!-- Announcements slideshow -->
     <section class="section" id="announcements">
         <div class="container">
             <h3 class="section-title">Announcements</h3>
             <p class="section-sub">Latest updates and news from NEUST Gabaldon.</p>
-            <div class="splide reveal" aria-label="Announcements preview">
-                <div class="splide__track">
-                    <ul class="splide__list">
-                        <?php mysqli_data_seek($result, 0); $i=0; while (($row = $result->fetch_assoc()) && $i < 6): $i++; ?>
-                        <li class="splide__slide">
-                            <div class="card room-card">
-                                <img src="uploads/announcements/<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['title']) ?>" loading="lazy" style="border-radius:12px; aspect-ratio:16/9; object-fit:cover; margin-bottom:8px;">
-                                <div class="room-chip"><i class="fa-solid fa-bullhorn"></i> Announcement</div>
-                                <h4 style="margin:8px 0 6px; font-weight:700;"><?= htmlspecialchars($row['title']) ?></h4>
-                                <p class="quote" style="margin-top:4px;">Posted: <?= htmlspecialchars(date('M d, Y', strtotime($row['date_posted'] ?? 'now'))) ?></p>
-                            </div>
-                        </li>
-                        <?php endwhile; ?>
-                    </ul>
-                </div>
+            <div class="slideshow-container reveal" aria-label="Announcements slideshow">
+                <?php mysqli_data_seek($result, 0); while ($row = $result->fetch_assoc()): ?>
+                    <div class="slide">
+                        <a href="announcement_details.php?id=<?= htmlspecialchars($row['id']) ?>">
+                            <img src="uploads/announcements/<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['title']) ?>" loading="lazy">
+                            <div class="caption"><?= htmlspecialchars($row['title']) ?></div>
+                        </a>
+                    </div>
+                <?php endwhile; ?>
             </div>
             <div style="margin-top:12px"><a href="student_announcement.php" class="btn btn-primary"><i class="fa-solid fa-bullhorn"></i> View Announcements</a></div>
         </div>
@@ -393,7 +386,6 @@ $result = $conn->query($sql);
                 <strong>Explore</strong>
                 <div><a href="student_announcement.php">Announcements</a></div>
                 <div><a href="#features">Features</a></div>
-                <div><a href="#how">How it works</a></div>
             </div>
             <div>
                 <strong>Support</strong>
@@ -439,14 +431,24 @@ $result = $conn->query($sql);
         </div>
     </div>
     
-    <!-- Splide + Landing JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <!-- jQuery & Slick Carousel Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
     <script src="assets/js/landing.js"></script>
     <script>
-        // Initialize rooms carousel
-        document.addEventListener('DOMContentLoaded', function(){
-            var el = document.querySelector('.splide');
-            if (el) new Splide(el, { type:'loop', perPage:3, gap:'14px', autoplay:true, interval:3500, pauseOnHover:true, breakpoints:{ 1000:{ perPage:2 }, 640:{ perPage:1 } } }).mount();
+        // Initialize announcements slideshow (same as student)
+        $(document).ready(function(){
+            $('.slideshow-container').slick({
+                dots: true,
+                infinite: true,
+                speed: 600,
+                fade: false,
+                autoplay: true,
+                autoplaySpeed: 3000,
+                arrows: true,
+                prevArrow: '<button class="slick-prev">&#10094;</button>',
+                nextArrow: '<button class="slick-next">&#10095;</button>'
+            });
         });
     </script>
 </body>
