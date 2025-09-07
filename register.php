@@ -1,5 +1,6 @@
 <?php 
 session_start();
+require_once __DIR__ . '/csrf.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -17,8 +18,12 @@ if ($conn->connect_error) {
 }
 
 $successMessage = "";
+$justRegisteredId = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!csrf_validate($_POST['csrf_token'] ?? null)) {
+        $successMessage = "Error: Invalid request.";
+    } else {
     $studentId = $_POST['user_id'];
     $firstName = $_POST['first_name'];
     $middleName = $_POST['middleName'];
@@ -62,6 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($stmt->execute()) {
             $successMessage = "New record created successfully";
+            $justRegisteredId = $studentId;
         } else {
             $successMessage = "Error: " . $stmt->error;
         }
@@ -70,6 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $checkStmt->close();
+    }
 }
 ?>
 
@@ -194,6 +201,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="step">4</div>
         </div>
         <form id="registrationForm" method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
             <div class="form-step active">
                 <h2>Personal Information</h2>
                 <input type="text" id="studentId" name="user_id" placeholder="Student ID" required>
@@ -256,7 +264,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <button type="submit">Submit</button>
             </div>
         </form>
-        <p>Already have an account? <a href="login.php">Login here</a></p>
+        <p>Already have an account? <a href="login.php" id="goLogin">Login here</a></p>
     </div>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -305,7 +313,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     passwordError.style.display = "none";
                 }
             });
+            // Loading state on submit
+            const form = document.getElementById('registrationForm');
+            const btn = document.querySelector('#registrationForm button[type="submit"]');
+            form.addEventListener('submit', function(){ if (btn){ btn.disabled = true; btn.textContent = 'Submitting...'; }});
+
+            // If inside landing page overlay, allow link to open login modal
+            const goLogin = document.getElementById('goLogin');
+            if (goLogin) {
+                goLogin.addEventListener('click', function(ev){
+                    try { window.parent.postMessage({ type: 'openLogin' }, '*'); ev.preventDefault(); } catch(e){}
+                });
+            }
         });
+        // If just registered, notify parent to open login with prefilled ID
+        <?php if (!empty($justRegisteredId)) { ?>
+        try { window.parent.postMessage({ type: 'openLogin', payload: { prefill: '<?= htmlspecialchars($justRegisteredId, ENT_QUOTES) ?>' } }, '*'); } catch(e){}
+        <?php } ?>
     </script>
 </body>
 </html>

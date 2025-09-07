@@ -1,5 +1,6 @@
 <?php 
 session_start(); // Start the session
+require_once __DIR__ . '/csrf.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -21,6 +22,9 @@ if ($conn->connect_error) {
 $errorMessage = ""; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!csrf_validate($_POST['csrf_token'] ?? null)) {
+        $errorMessage = "Invalid request. Please refresh and try again.";
+    } else {
     $userId = trim($_POST['user_id']);
     $password = $_POST['password'];
     $rememberMe = isset($_POST['remember_me']);
@@ -82,6 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errorMessage = "User ID does not exist.";
     }
     $stmt->close();
+    }
 }
 ?>
 
@@ -222,6 +227,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <i class="fas fa-user-circle icon"></i>
         <h2>Login</h2>
         <form method="POST" action="" id="loginForm">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
             <div class="input-group">
                 <input type="text" name="user_id" placeholder="User ID" value="<?php echo isset($_COOKIE['user_id']) ? $_COOKIE['user_id'] : ''; ?>" required>
             </div>
