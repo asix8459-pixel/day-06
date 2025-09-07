@@ -201,6 +201,36 @@ $result = $conn->query($sql);
             margin: 0; 
             font-size: 18px; 
         }
+
+        /* Hero - animated Figma-style */
+        .hero {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            align-items: center;
+            gap: 40px;
+            padding: 70px 8% 40px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #001934 0%, #012a52 40%, #023b70 100%);
+            color: #fff;
+        }
+        .hero h1 { font-size: 48px; line-height: 1.1; margin: 0 0 14px; }
+        .hero p { font-size: 18px; color: #e6eef8; margin: 0 0 24px; max-width: 560px; }
+        .hero .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn-primary { background: #ffd700; color: #001934; border: 0; padding: 12px 18px; border-radius: 10px; font-weight: 700; box-shadow: 0 8px 22px rgba(255,215,0,.25); }
+        .btn-ghost { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.24); padding: 12px 18px; border-radius: 10px; }
+        .btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
+        .btn-ghost:hover { background: rgba(255,255,255,.18); transform: translateY(-1px); }
+        .hero-visual { position: relative; height: 360px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(8px); box-shadow: 0 24px 80px rgba(0,0,0,.25); }
+        .blob { position: absolute; border-radius: 50%; filter: blur(40px); opacity: .55; animation: float 8s ease-in-out infinite; }
+        .b1 { width: 220px; height: 220px; left: -40px; top: -40px; background: #0ea5e9; animation-delay: 0s; }
+        .b2 { width: 260px; height: 260px; right: -50px; bottom: -50px; background: #22c55e; animation-delay: 1.2s; }
+        .b3 { width: 180px; height: 180px; left: 40%; top: 20%; background: #f59e0b; animation-delay: .6s; }
+        @keyframes float { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-14px) } }
+
+        /* Reveal animations for sections */
+        .reveal { opacity: 0; transform: translateY(18px); transition: all .5s ease; }
+        .reveal.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
@@ -219,6 +249,22 @@ $result = $conn->query($sql);
     </div>
   
 
+    <section class="hero">
+        <div>
+            <h1 class="reveal">Student Services, Simplified</h1>
+            <p class="reveal" style="transition-delay:.08s">Access scholarships, dormitory, guidance, and more in one beautiful portal.</p>
+            <div class="cta reveal" style="transition-delay:.16s">
+                <button id="ctaLogin" class="btn-primary">Login</button>
+                <button id="ctaRegister" class="btn-ghost">Create account</button>
+            </div>
+        </div>
+        <div class="hero-visual reveal" style="transition-delay:.24s">
+            <div class="blob b1"></div>
+            <div class="blob b2"></div>
+            <div class="blob b3"></div>
+        </div>
+    </section>
+
     <div class="slideshow-container">
         <?php while ($row = $result->fetch_assoc()): ?>
             <div class="slide">
@@ -228,7 +274,7 @@ $result = $conn->query($sql);
         <?php endwhile; ?>
     </div>
 
-    <div class="about" id="about">
+    <div class="about reveal" id="about">
         <h2>About Us</h2>
         <p>
             NEUST Gabaldon Student Services Management System is designed to optimize and enhance the management of various student services. 
@@ -237,7 +283,7 @@ $result = $conn->query($sql);
         </p>
     </div>
 
-    <div class="services" id="services">
+    <div class="services reveal" id="services">
         <h2>Our Services</h2>
         <div class="service">
             <h3>Announcements</h3>
@@ -296,6 +342,19 @@ $result = $conn->query($sql);
                 prevArrow: '<button class="slick-prev">&#10094;</button>',
                 nextArrow: '<button class="slick-next">&#10095;</button>'
             });
+            // CTA buttons open modals
+            $('#ctaLogin').on('click', function(){ $('#openLogin').trigger('click'); });
+            $('#ctaRegister').on('click', function(){ $('#openRegister').trigger('click'); });
+            // reveal on scroll
+            function onScrollReveal(){
+                const wh = window.innerHeight;
+                $('.reveal').each(function(){
+                    const rect = this.getBoundingClientRect();
+                    if (rect.top < wh - 60) this.classList.add('show');
+                });
+            }
+            onScrollReveal();
+            document.addEventListener('scroll', onScrollReveal, { passive: true });
             function openOverlay(id, src){
                 const $overlay = $('#'+id);
                 $overlay.css('display','flex');
