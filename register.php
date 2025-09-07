@@ -18,10 +18,11 @@ if ($conn->connect_error) {
 }
 
 $successMessage = "";
+$errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!csrf_validate($_POST['csrf_token'] ?? null)) {
-        $successMessage = "Error: Invalid request.";
+        $errors[] = "Invalid request. Please refresh and try again.";
     } else {
     $studentId = $_POST['user_id'];
     $firstName = $_POST['first_name'];
@@ -42,7 +43,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $fatherWork = $_POST['fatherWork'];
     $fatherContact = $_POST['fatherContact'];
     $siblingsCount = $_POST['siblingsCount'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $rawPassword = $_POST['password'] ?? '';
+
+    // Basic server-side validations
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $errors[] = "Please enter a valid email address."; }
+    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $rawPassword)) { $errors[] = "Password must be 8+ chars with upper, lower, and a number."; }
+    if (empty($studentId) || empty($firstName) || empty($lastName) || empty($birthDate) || empty($biologicalSex) || empty($year = $_POST['year']) || empty($section = $_POST['section']) || empty($course = $_POST['course'])) {
+        $errors[] = "Please complete all required fields.";
+    }
+    $password = password_hash($rawPassword, PASSWORD_DEFAULT);
 
     $role = "Student"; // Always Student
     $year = $_POST['year'];
@@ -50,30 +59,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $course = $_POST['course'];
     $department = NULL;
 
-    $checkStmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = ? OR email = ?");
-    $checkStmt->bind_param("ss", $studentId, $email);
-    $checkStmt->execute();
-    $checkStmt->store_result();
+    if (!$errors) {
+        $checkStmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = ? OR email = ?");
+        if ($checkStmt) {
+            $checkStmt->bind_param("ss", $studentId, $email);
+            $checkStmt->execute();
+            $checkStmt->store_result();
+            if ($checkStmt->num_rows > 0) {
+                $errors[] = "User ID or Email already exists.";
+            }
+            $checkStmt->close();
+        } else {
+            $errors[] = "System error. Please try again later.";
+        }
+    }
 
-    if ($checkStmt->num_rows > 0) {
-        $successMessage = "Error: User ID or Email already exists.";
-    } else {
+    if (!$errors) {
         $stmt = $conn->prepare("INSERT INTO users 
         (user_id, first_name, middle_name, last_name, birth_date, nationality, religion, biological_sex, email, phone, current_address, permanent_address, role, year, section, course, department, password_hash, mother_name, mother_work, mother_contact, father_name, father_work, father_contact, siblings_count) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-        $stmt->bind_param("sssssssssssssssssssssssss", $studentId, $firstName, $middleName, $lastName, $birthDate, $nationality, $religion, $biologicalSex, $email, $phone, $currentAddress, $permanentAddress, $role, $year, $section, $course, $department, $password, $motherName, $motherWork, $motherContact, $fatherName, $fatherWork, $fatherContact, $siblingsCount);
-
-        if ($stmt->execute()) {
-            $successMessage = "New record created successfully";
+        if ($stmt) {
+            $stmt->bind_param("sssssssssssssssssssssssss", $studentId, $firstName, $middleName, $lastName, $birthDate, $nationality, $religion, $biologicalSex, $email, $phone, $currentAddress, $permanentAddress, $role, $year, $section, $course, $department, $password, $motherName, $motherWork, $motherContact, $fatherName, $fatherWork, $fatherContact, $siblingsCount);
+            if ($stmt->execute()) {
+                header('Location: login.php?registered=1');
+                exit;
+            } else {
+                $errors[] = "Error saving record: " . $stmt->error;
+            }
+            $stmt->close();
         } else {
-            $successMessage = "Error: " . $stmt->error;
+            $errors[] = "System error. Please try again later.";
         }
-
-        $stmt->close();
     }
-
-    $checkStmt->close();
     }
 }
 ?>
