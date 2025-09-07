@@ -449,7 +449,7 @@ require_once __DIR__ . '/csrf.php';
                 <div id="authPaneRegister" class="auth-pane hidden">
                     <h3 class="auth-title">Create Account</h3>
                     <div class="auth-sub">Join and get started</div>
-                    <form class="auth-form" method="POST" action="register.php">
+                    <form class="auth-form" method="POST" action="register.php" id="registerLite">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
                         <input class="auth-input" type="text" name="first_name" placeholder="First Name" required aria-label="First Name">
                         <input class="auth-input" type="email" name="email" placeholder="Email" required aria-label="Email">
