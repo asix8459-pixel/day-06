@@ -78,6 +78,7 @@ require_once __DIR__ . '/csrf.php';
                 <div class="blob b1"></div>
                 <div class="blob b2"></div>
                 <div class="blob b3"></div>
+                <img src="assets/logo.png" alt="NEUST" class="hero-logo" loading="lazy">
             </div>
         </div>
     </section>

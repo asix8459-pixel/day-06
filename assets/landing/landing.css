@@ -66,6 +66,8 @@ body.dark .hero-visual{border-color:rgba(255,255,255,.06)}
 .b2{width:260px; height:260px; right:-40px; bottom:-40px; background:#22c55e; animation-delay:1.2s}
 .b3{width:180px; height:180px; left:40%; top:22%; background:#f59e0b; animation-delay:.6s}
 @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)}}
+/* Hero NEUST logo */
+.landing-page .hero-visual .hero-logo{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:140px; height:140px; border-radius:16px; padding:10px; background:rgba(255,255,255,.9); border:1px solid rgba(0,0,0,.06); box-shadow:0 18px 50px rgba(0,0,0,.18)}
 
 /* Sections */
 .landing-page .section{padding:56px 0}
