@@ -120,7 +120,7 @@ function render_amenities($amenities, $icons){
             background: var(--glass); border:1px solid rgba(0,0,0,.04);
             border-radius: 18px; box-shadow: 0 14px 44px rgba(2,32,71,.12);
             overflow:hidden; break-inside: avoid; transition: transform .35s, box-shadow .35s;
-            opacity:0; animation: fadeUp .7s cubic-bezier(.19,1,.22,1) forwards;
+            opacity:1;
         }
         @keyframes fadeUp { from{ transform: translateY(36px); opacity:0 } to{ transform:none; opacity:1 } }
         .card.room-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 22px 66px rgba(2,32,71,.18); }
@@ -137,6 +137,12 @@ function render_amenities($amenities, $icons){
         .btn-apply:disabled { background:#bbb; cursor:not-allowed; }
         .modal-header { background:var(--primary); color:#fff; border-top-left-radius:16px; border-top-right-radius:16px; }
         .modal-content { border-radius:16px; box-shadow:0 16px 44px rgba(2,32,71,.18); }
+        @media (prefers-reduced-motion: no-preference) {
+            .card.room-card { opacity:0; animation: fadeUp .7s cubic-bezier(.19,1,.22,1) forwards; }
+            .grid > .room-card:nth-child(2) { animation-delay: .08s; }
+            .grid > .room-card:nth-child(3) { animation-delay: .12s; }
+            .grid > .room-card:nth-child(4) { animation-delay: .16s; }
+        }
     </style>
     <title>Apply for Dormitory Room</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
