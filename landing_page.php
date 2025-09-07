@@ -11,6 +11,7 @@ if ($conn->connect_error) {
 
 $sql = "SELECT * FROM announcements ORDER BY date_posted DESC";
 $result = $conn->query($sql);
+require_once __DIR__ . '/csrf.php';
 ?>
 
 <!DOCTYPE html>
@@ -27,6 +28,8 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
     <!-- Landing CSS -->
     <link rel="stylesheet" href="assets/css/landing.css">
+    <!-- Auth Split UI CSS -->
+    <link rel="stylesheet" href="assets/css/auth.css">
     <style>
         body { 
             font-family: 'Roboto', sans-serif; 
@@ -418,16 +421,49 @@ $result = $conn->query($sql);
         body.modal-blur .services,
         body.modal-blur .footer { filter: blur(6px) brightness(.9); transition: filter .25s ease; pointer-events: none; }
     </style>
-    <div class="overlay-backdrop" id="loginOverlay" aria-hidden="true">
-        <div class="overlay-modal" role="dialog" aria-modal="true" aria-labelledby="loginOverlayTitle">
-            <div class="overlay-header"><span id="loginOverlayTitle" class="overlay-title">Login</span><button class="overlay-close" data-close="loginOverlay" aria-label="Close">×</button></div>
-            <div class="overlay-body"><iframe id="loginFrame" src="about:blank"></iframe></div>
-        </div>
-    </div>
-    <div class="overlay-backdrop" id="registerOverlay" aria-hidden="true">
-        <div class="overlay-modal" role="dialog" aria-modal="true" aria-labelledby="registerOverlayTitle">
-            <div class="overlay-header"><span id="registerOverlayTitle" class="overlay-title">Register</span><button class="overlay-close" data-close="registerOverlay" aria-label="Close">×</button></div>
-            <div class="overlay-body"><iframe id="registerFrame" src="about:blank"></iframe></div>
+    <!-- Auth Split Overlay -->
+    <div class="auth-overlay" id="authOverlay" aria-hidden="true">
+        <div class="auth-card" id="authCard" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+            <button class="auth-close auth-switch" id="authClose" aria-label="Close">×</button>
+            <!-- Left: Sign In -->
+            <div class="auth-side auth-left">
+                <div id="authPaneLogin" class="auth-pane visible">
+                    <h3 class="auth-title" id="authTitle">Welcome Back!</h3>
+                    <div class="auth-sub">Sign in to continue</div>
+                    <form class="auth-form" method="POST" action="login.php">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
+                        <input class="auth-input" type="text" name="user_id" placeholder="User ID" required aria-label="User ID">
+                        <input class="auth-input" type="password" name="password" placeholder="Password" required aria-label="Password">
+                        <button class="auth-btn" type="submit">Sign In</button>
+                        <div class="auth-socials" aria-label="Social login">
+                            <a href="#" aria-label="Sign in with Google"><i class="fa-brands fa-google"></i></a>
+                            <a href="#" aria-label="Sign in with Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#" aria-label="Sign in with Apple"><i class="fa-brands fa-apple"></i></a>
+                        </div>
+                        <div style="margin-top:8px">No account? <a href="#" id="toRegister" style="text-decoration:underline; color:#fff">Create one</a></div>
+                    </form>
+                </div>
+            </div>
+            <!-- Right: Sign Up -->
+            <div class="auth-side auth-right">
+                <div id="authPaneRegister" class="auth-pane hidden">
+                    <h3 class="auth-title">Create Account</h3>
+                    <div class="auth-sub">Join and get started</div>
+                    <form class="auth-form" method="POST" action="register.php">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
+                        <input class="auth-input" type="text" name="first_name" placeholder="First Name" required aria-label="First Name">
+                        <input class="auth-input" type="email" name="email" placeholder="Email" required aria-label="Email">
+                        <input class="auth-input" type="password" name="password" placeholder="Password" required aria-label="Password">
+                        <button class="auth-btn auth-btn-alt" type="submit">Sign Up</button>
+                        <div class="auth-socials" aria-label="Social register">
+                            <a href="#" aria-label="Sign up with Google"><i class="fa-brands fa-google"></i></a>
+                            <a href="#" aria-label="Sign up with Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#" aria-label="Sign up with Apple"><i class="fa-brands fa-apple"></i></a>
+                        </div>
+                        <div style="margin-top:8px">Have an account? <a href="#" id="toLogin" style="text-decoration:underline;">Sign in</a></div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -435,6 +471,7 @@ $result = $conn->query($sql);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
     <script src="assets/js/landing.js"></script>
+    <script src="assets/js/auth.js"></script>
     <script>
         // Initialize announcements slideshow (same as student)
         $(document).ready(function(){
