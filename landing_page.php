@@ -26,10 +26,10 @@ require_once __DIR__ . '/csrf.php';
     <!-- Slick Carousel CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
-    <!-- Landing CSS -->
-    <link rel="stylesheet" href="assets/css/landing.css">
+    <!-- Landing-only CSS -->
+    <link rel="stylesheet" href="assets/landing/landing.css">
     <!-- Auth Split UI CSS -->
-    <link rel="stylesheet" href="assets/css/auth.css">
+    <link rel="stylesheet" href="assets/landing/auth.css">
     <style>
         /* Slideshow (namespaced to landing page) */
         .landing-page .slideshow-container { max-width: 85%; margin: 20px auto; position: relative; }
@@ -277,8 +277,8 @@ require_once __DIR__ . '/csrf.php';
     <!-- jQuery & Slick Carousel Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-    <script src="assets/js/landing.js"></script>
-    <script src="assets/js/auth.js"></script>
+    <script src="assets/landing/landing.js"></script>
+    <script src="assets/landing/auth.js"></script>
     <script>
         // Initialize announcements slideshow (same as student)
         $(document).ready(function(){
