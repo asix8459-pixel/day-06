@@ -60,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['apply_room'])) {
 }
 $query = "SELECT * FROM rooms";
 $result = mysqli_query($conn, $query);
+$rooms = [];
+if ($result) { while ($r = mysqli_fetch_assoc($result)) { $rooms[] = $r; } }
 
 // UI helpers
 function peso($v){ return '₱' . number_format((float)$v, 2); }
@@ -152,15 +154,22 @@ function render_amenities($amenities, $icons){
     <?php include 'student_header.php'; ?>
     <div class="container mt-4">
         <h2 class="text-center mb-4" style="color:var(--primary); font-weight:900; letter-spacing:.4px;">Premium Dorm Rooms</h2>
+        <?php if (!count($rooms)): ?>
+        <div class="text-center" style="color:#64748b; padding:40px 0;">
+            <div style="font-size:56px; opacity:.8; margin-bottom:12px;"><i class="fa-solid fa-bed"></i></div>
+            <div style="font-weight:800; font-size:20px; color:#0f172a;">No rooms found</div>
+            <div style="margin-top:6px;">Please check back later or contact the dormitory admin.</div>
+        </div>
+        <?php else: ?>
         <div class="grid">
-            <?php while ($row = mysqli_fetch_assoc($result)): 
+            <?php foreach ($rooms as $row): 
                 $available = max(0, (int)$row['total_beds'] - (int)$row['occupied_beds']);
                 $isAvail = $available > 0;
                 $statusClass = $isAvail ? 'status-chip' : 'status-chip full';
             ?>
             <div class="card room-card">
                 <div style="position:relative;">
-                    <img src="<?= htmlspecialchars($row['image']) ?>" class="room-img" alt="Room image: <?= htmlspecialchars($row['name']) ?>" loading="lazy" width="1024" height="680">
+                    <img src="<?= htmlspecialchars($row['image']) ?>" class="room-img" alt="Room image: <?= htmlspecialchars($row['name']) ?>" loading="lazy" width="1024" height="680" onerror="this.style.background='#e9ecef'; this.alt='Image unavailable';">
                     <span class="price-chip"><?= peso($row['price_per_month']) ?>/month</span>
                     <span class="<?= $statusClass ?>"><?= $isAvail ? '✅ Available' : '❌ Full' ?></span>
                 </div>
@@ -190,8 +199,9 @@ function render_amenities($amenities, $icons){
                     </div>
                 </div>
             </div>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
     <!-- Room Details Modal -->
     <div class="modal fade" id="roomDetailsModal" tabindex="-1" aria-labelledby="roomDetailsModalLabel" aria-hidden="true">
@@ -282,7 +292,22 @@ function render_amenities($amenities, $icons){
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div id="toastWrap" aria-live="polite" aria-atomic="true" style="position: fixed; right: 16px; bottom: 16px; z-index: 1080;"></div>
     <script>
+        function showToast(type, msg){
+            const wrap = document.getElementById('toastWrap');
+            const id = 't'+Date.now();
+            const bg = type==='success' ? '#d1e7dd' : '#f8d7da';
+            const fg = type==='success' ? '#0f5132' : '#842029';
+            const icon = type==='success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+            const el = document.createElement('div');
+            el.id = id;
+            el.setAttribute('role','alert');
+            el.style.cssText = `background:${bg}; color:${fg}; box-shadow:0 10px 26px rgba(2,32,71,.22); border-radius:12px; padding:10px 14px; margin-top:10px; display:flex; align-items:center; gap:10px;`;
+            el.innerHTML = `<i class="fa-solid ${icon}"></i><div>${msg}</div>`;
+            wrap.appendChild(el);
+            setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(6px)'; setTimeout(()=>el.remove(), 220); }, 2200);
+        }
         document.addEventListener("DOMContentLoaded", function() {
             let applyRoomModal = new bootstrap.Modal(document.getElementById("applyRoomModal"));
             let roomDetailsModal = new bootstrap.Modal(document.getElementById("roomDetailsModal"));
@@ -358,28 +383,22 @@ function render_amenities($amenities, $icons){
                 event.preventDefault();
                 let formData = new FormData(this);
                 formData.append("apply_room", true);
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const oldHtml = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting';
                 fetch("rooms.php", {
                     method: "POST",
                     body: formData
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        document.getElementById("messageModalBody").classList.add("success");
-                        document.getElementById("messageModalBody").classList.remove("error");
-                        document.getElementById("messageModalBody").innerHTML = data.message;
-                    } else {
-                        document.getElementById("messageModalBody").classList.add("error");
-                        document.getElementById("messageModalBody").classList.remove("success");
-                        document.getElementById("messageModalBody").innerHTML = data.message;
-                    }
-                    messageModal.show();
-                    setTimeout(() => {
-                        messageModal.hide();
-                        if (data.success) location.reload();
-                    }, 2000);
+                    applyRoomModal.hide();
+                    showToast(data.success ? 'success' : 'error', data.message || (data.success?'Success':'Something went wrong'));
+                    if (data.success) setTimeout(()=>location.reload(), 1200);
                 })
-                .catch(error => console.error("Error:", error));
+                .catch(() => { showToast('error','Network error. Please try again.'); })
+                .finally(()=>{ submitBtn.disabled=false; submitBtn.innerHTML = oldHtml; });
             });
         });
     </script>
