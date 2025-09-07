@@ -55,7 +55,9 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
         .main-content{margin-left:260px;padding:20px 24px 28px 24px;width:calc(100% - 260px);min-height:100vh;background:radial-gradient(1200px 600px at 10% -20%,#1b2a52 0%,rgba(27,42,82,0) 60%),radial-gradient(800px 400px at 120% 0%,#0b5ed7 0%,rgba(11,94,215,0) 55%)}
         .hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#003366 0%,#0b5ed7 100%);color:#fff;border-radius:18px;padding:20px 22px;box-shadow:0 18px 54px rgba(2,32,71,.3);margin-bottom:14px}
         .hero h2{margin:0 0 4px;font-weight:900;letter-spacing:.3px;text-shadow:0 4px 18px rgba(0,0,0,.25)}
-        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+        .stats-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}
+        @media (max-width: 1100px){ .stats-row{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media (max-width: 700px){ .stats-row{ grid-template-columns:1fr; } }
         .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;box-shadow:0 14px 44px rgba(2,32,71,.4);backdrop-filter:blur(8px) saturate(120%);display:flex;align-items:center;gap:10px}
         .stat .ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 22px rgba(2,32,71,.35);font-size:16px}
         .ic-pending{background:linear-gradient(135deg,#f59f00,#ffcd39)}
@@ -101,7 +103,7 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
             <h2><i class="fa-solid fa-building-columns"></i> Dormitory Admin Dashboard</h2>
             <p>Monitor room capacity, applications, payments, and operations at a glance.</p>
         </div>
-        <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(200px,1fr));">
+        <div class="stats-row">
             <div class="stat" onclick="navigateTo('dormitory_manage_applications.php')">
                 <div class="ic ic-pending"><i class="fa-solid fa-hourglass-half"></i></div>
                 <div class="txt"><div class="k" id="mPending"><?= $pendingCount ?></div><div class="l">Pending Applications</div></div>
@@ -114,6 +116,8 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
                 <div class="ic ic-rejected"><i class="fa-solid fa-xmark"></i></div>
                 <div class="txt"><div class="k" id="mRejected"><?= $rejectedCount ?></div><div class="l">Rejected</div></div>
             </div>
+        </div>
+        <div class="stats-row">
             <div class="stat" onclick="navigateTo('occupied_rooms.php')">
                 <div class="ic ic-occupied"><i class="fa-solid fa-bed"></i></div>
                 <div class="txt"><div class="k" id="mOccupied"><?= $occupiedBeds ?></div><div class="l">Occupied Beds</div></div>
