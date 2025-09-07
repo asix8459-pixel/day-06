@@ -128,7 +128,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             text-align: center;
             transition: all 0.3s;
+            transform: translateY(10px);
+            opacity: 0;
+            animation: fadeSlide .45s ease forwards;
         }
+
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .container:hover {
             transform: scale(1.02);
@@ -205,13 +210,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         button:hover {
             background: var(--secondary-color);
         }
+
+        .spinner {
+            width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.6); border-top-color: #fff; border-radius: 50%; display: inline-block; margin-right: 8px; animation: spin .8s linear infinite; vertical-align: -2px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="container">
         <i class="fas fa-user-circle icon"></i>
         <h2>Login</h2>
-        <form method="POST" action="">
+        <form method="POST" action="" id="loginForm">
             <div class="input-group">
                 <input type="text" name="user_id" placeholder="User ID" value="<?php echo isset($_COOKIE['user_id']) ? $_COOKIE['user_id'] : ''; ?>" required>
             </div>
@@ -224,11 +234,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label for="remember_me">Remember Me</label>
             </div>
             <span class="error"><?php echo $errorMessage; ?></span>
-            <button type="submit">Login</button>
+            <button type="submit" id="loginBtn">Login</button>
         </form>
-        <p>Don't have an account? <a href="register.php">Register here</a></p>
+        <div style="margin-top:10px; display:flex; justify-content: space-between; align-items:center;">
+            <a href="register.php">Create account</a>
+            <a href="reset_password.php">Forgot password?</a>
+        </div>
     </div>
     <script>
+        // Loading state on submit
+        document.getElementById('loginForm').addEventListener('submit', function(){
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Signing in...';
+        });
         document.getElementById("togglePassword").addEventListener("click", function () {
             let passwordInput = document.getElementById("password");
             this.classList.toggle("fa-eye-slash");

@@ -35,6 +35,7 @@ $result = $conn->query($sql);
         color: #333; 
             
         }
+        html { scroll-behavior: smooth; }
         .navbar { 
             background:rgb(2, 31, 61); 
          
@@ -401,6 +402,30 @@ $result = $conn->query($sql);
                         if (href.indexOf(page) !== -1){ window.location.href = href; return; }
                     }
                 } catch(err) {}
+            });
+
+            // Listen for messages from iframes (e.g., registration success -> open login)
+            window.addEventListener('message', function(ev){
+                if (!ev.data || typeof ev.data !== 'object') return;
+                if (ev.data.type === 'openLogin') {
+                    closeOverlay('registerOverlay');
+                    openOverlay('loginOverlay', 'login.php');
+                    const prefill = ev.data.payload && ev.data.payload.prefill;
+                    if (prefill) {
+                        const frame = document.getElementById('loginFrame');
+                        const tryPrefill = () => {
+                            try {
+                                const doc = frame.contentWindow.document;
+                                const input = doc.querySelector('input[name="user_id"]');
+                                if (input) { input.value = prefill; return true; }
+                            } catch(e) {}
+                            return false;
+                        };
+                        if (!tryPrefill()) {
+                            frame.addEventListener('load', tryPrefill, { once: true });
+                        }
+                    }
+                }
             });
         });
     </script>
