@@ -313,6 +313,10 @@ $result = $conn->query($sql);
             $('#openLogin').on('click', function(e){ e.preventDefault(); openOverlay('loginOverlay', 'login.php'); });
             $('#openRegister').on('click', function(e){ e.preventDefault(); openOverlay('registerOverlay', 'register.php'); });
             $('[data-close]').on('click', function(){ closeOverlay($(this).data('close')); });
+            // backdrop click to close
+            $('.overlay-backdrop').on('click', function(e){ if (e.target === this) { $(this).hide(); $('body').css('overflow','auto'); } });
+            // prevent clicks inside modal from closing
+            $('.overlay-modal').on('click', function(e){ e.stopPropagation(); });
             $(document).on('keydown', function(e){ if (e.key === 'Escape'){ closeOverlay('loginOverlay'); closeOverlay('registerOverlay'); }});
             // bubble iframe redirects to top-level when logged in
             const dashboards = [
