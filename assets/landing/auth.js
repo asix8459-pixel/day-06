@@ -41,10 +41,30 @@ var AuthUI=(function(){
     if (regForm) {
       var steps = regForm.querySelectorAll('.reg-step');
       var step = 0;
-      function show(i){ steps.forEach(function(s,idx){ s.style.display = idx===i ? '' : 'none'; }); }
+      function show(i){
+        steps.forEach(function(s,idx){ s.style.display = idx===i ? '' : 'none'; });
+        var first = steps[i].querySelector('input, select, textarea');
+        if (first) first.focus();
+      }
+      function validate(i){
+        var ok = true;
+        var req = steps[i].querySelectorAll('[required]');
+        req.forEach(function(el){
+          if (!el.value){ ok = false; el.style.borderColor = '#b91c1c'; }
+          else { el.style.borderColor = '#cfd8dc'; }
+        });
+        return ok;
+      }
       show(step);
-      regForm.querySelectorAll('.reg-next').forEach(function(btn){ btn.addEventListener('click', function(){ step = Math.min(step+1, steps.length-1); show(step); }); });
-      regForm.querySelectorAll('.reg-prev').forEach(function(btn){ btn.addEventListener('click', function(){ step = Math.max(step-1, 0); show(step); }); });
+      regForm.querySelectorAll('.reg-next').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if (!validate(step)) return;
+          step = Math.min(step+1, steps.length-1); show(step);
+        });
+      });
+      regForm.querySelectorAll('.reg-prev').forEach(function(btn){
+        btn.addEventListener('click', function(){ step = Math.max(step-1, 0); show(step); });
+      });
     }
 
     // Show/Hide password toggles
