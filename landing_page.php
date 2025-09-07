@@ -19,12 +19,13 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEUST Gabaldon Student Services</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <!-- Minimal carousel (Splide) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+    <!-- Landing CSS -->
+    <link rel="stylesheet" href="assets/css/landing.css">
     <style>
         body { 
             font-family: 'Roboto', sans-serif; 
@@ -235,45 +236,118 @@ $result = $conn->query($sql);
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <div class="logo">
-            <img src="assets/logo.png" alt="NEUST Gabaldon Student Services" style="height: 70px; margin-left: 10px;">
-            <span style="color: white; font-size: 20px; margin-left: 10px;">NEUST Gabaldon Student Services</span>
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a class="brand" href="#" aria-label="NEUST Home">
+                <img src="assets/logo.png" alt="NEUST Gabaldon Logo" loading="lazy">
+                <span>NEUST Student Services</span>
+            </a>
+            <div class="nav-links" role="navigation" aria-label="Primary">
+                <a href="#features">Features</a>
+                <a href="#rooms">Rooms</a>
+                <a href="#how">How it works</a>
+                <a href="#testimonials">Testimonials</a>
+                <button id="modeToggle" class="mode-toggle" aria-label="Toggle dark mode"><i class="fa-regular fa-moon"></i></button>
+                <a href="#" id="openLogin" class="btn btn-ghost" aria-haspopup="dialog">Login</a>
+                <a href="#" id="openRegister" class="btn btn-primary" aria-haspopup="dialog">Register</a>
+            </div>
         </div>
-        <ul class="nav-links">
-            <li><a href="#">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#" id="openLogin">Login</a></li>
-            <li><a href="#" id="openRegister">Register</a></li>
-        </ul>
-    </div>
+    </nav>
   
 
     <section class="hero">
-        <div>
-            <h1 class="reveal">Student Services, Simplified</h1>
-            <p class="reveal" style="transition-delay:.08s">Access scholarships, dormitory, guidance, and more in one beautiful portal.</p>
-            <div class="cta reveal" style="transition-delay:.16s">
-                <button id="ctaLogin" class="btn-primary">Login</button>
-                <button id="ctaRegister" class="btn-ghost">Create account</button>
+        <div class="container hero-grid">
+            <div>
+                <h1 class="headline reveal">Student Services, Simplified</h1>
+                <p class="subhead reveal" style="transition-delay:.08s">Access scholarships, dormitory rooms, guidance, and more — fast, modern, and secure.</p>
+                <div class="cta-row reveal" style="transition-delay:.16s">
+                    <button id="ctaRegister" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Create account</button>
+                    <button id="ctaLogin" class="btn btn-ghost"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+                </div>
             </div>
-        </div>
-        <div class="hero-visual reveal" style="transition-delay:.24s">
-            <div class="blob b1"></div>
-            <div class="blob b2"></div>
-            <div class="blob b3"></div>
+            <div class="hero-visual reveal" style="transition-delay:.24s" aria-hidden="true">
+                <div class="blob b1"></div>
+                <div class="blob b2"></div>
+                <div class="blob b3"></div>
+            </div>
         </div>
     </section>
 
-    <div class="slideshow-container">
-        <?php while ($row = $result->fetch_assoc()): ?>
-            <div class="slide">
-                <img src="uploads/announcements/<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['title']) ?>">
-                <div class="caption"> <?= htmlspecialchars($row['title']) ?> </div>
+    <!-- Features -->
+    <section class="section" id="features">
+        <div class="container">
+            <h3 class="section-title">Why NEUST Student Services</h3>
+            <p class="section-sub">Modern, reliable, and designed for you.</p>
+            <div class="grid grid-4">
+                <div class="card reveal"><div class="card-icon ic-blue"><i class="fa-solid fa-bolt"></i></div><h4>Fast & Seamless</h4><p>Optimized flows to apply, track, and manage in minutes.</p></div>
+                <div class="card reveal"><div class="card-icon ic-cyan"><i class="fa-solid fa-shield-halved"></i></div><h4>Secure</h4><p>Role-based access, CSRF protection, and audit logs.</p></div>
+                <div class="card reveal"><div class="card-icon ic-gold"><i class="fa-solid fa-sparkles"></i></div><h4>Modern UI</h4><p>Glassmorphism, animations, and accessible interactions.</p></div>
+                <div class="card reveal"><div class="card-icon ic-green"><i class="fa-solid fa-mobile-screen"></i></div><h4>Responsive</h4><p>Works great from mobile to desktop without compromise.</p></div>
             </div>
-        <?php endwhile; ?>
-    </div>
+        </div>
+    </section>
+
+    <!-- Rooms preview (carousel) -->
+    <section class="section" id="rooms">
+        <div class="container">
+            <h3 class="section-title">Dormitory Rooms</h3>
+            <p class="section-sub">Explore available rooms and apply quickly.</p>
+            <div class="splide reveal" aria-label="Rooms preview">
+                <div class="splide__track">
+                    <ul class="splide__list">
+                        <?php mysqli_data_seek($result, 0); $i=0; while ($row = $result->fetch_assoc() && $i<6): $i++; ?>
+                        <li class="splide__slide">
+                            <div class="card room-card">
+                                <img src="uploads/announcements/<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['title']) ?>" loading="lazy" style="border-radius:12px; aspect-ratio:16/9; object-fit:cover; margin-bottom:8px;">
+                                <div class="room-chip"><i class="fa-solid fa-bed"></i> Featured</div>
+                                <h4 style="margin:8px 0 6px; font-weight:700;">Room highlight</h4>
+                                <p class="quote"><?= htmlspecialchars($row['title']) ?></p>
+                            </div>
+                        </li>
+                        <?php endwhile; ?>
+                    </ul>
+                </div>
+            </div>
+            <div style="margin-top:12px"><a href="rooms.php" class="btn btn-primary"><i class="fa-solid fa-door-open"></i> Explore Rooms</a></div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section" id="how">
+        <div class="container">
+            <h3 class="section-title">How it works</h3>
+            <div class="grid grid-3">
+                <div class="card reveal"><div class="card-icon ic-gold"><i class="fa-solid fa-user-plus"></i></div><h4>Create your account</h4><p>Register in seconds with your basic details.</p></div>
+                <div class="card reveal"><div class="card-icon ic-blue"><i class="fa-solid fa-file-signature"></i></div><h4>Apply or Request</h4><p>Guidance, dorm rooms, scholarships, and more.</p></div>
+                <div class="card reveal"><div class="card-icon ic-cyan"><i class="fa-solid fa-check-circle"></i></div><h4>Get updates</h4><p>Track status, receive emails, and manage actions.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section" id="testimonials">
+        <div class="container">
+            <h3 class="section-title">Trusted by students</h3>
+            <div class="grid grid-3">
+                <div class="card reveal"><p class="quote">“Super dali gamitin, ang bilis mag-apply at mag-track.”</p><div style="display:flex; align-items:center; gap:10px; margin-top:10px"><div class="avatar"></div><div><strong>J. Santos</strong><div class="muted">BSIT</div></div></div></div>
+                <div class="card reveal"><p class="quote">“Modern UI, smooth and walang hassle sa submissions.”</p><div style="display:flex; align-items:center; gap:10px; margin-top:10px"><div class="avatar"></div><div><strong>A. Cruz</strong><div class="muted">Education</div></div></div></div>
+                <div class="card reveal"><p class="quote">“Finally, one place for dorm, guidance, and scholarships.”</p><div style="display:flex; align-items:center; gap:10px; margin-top:10px"><div class="avatar"></div><div><strong>K. Dela Cruz</strong><div class="muted">Engineering</div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA strip -->
+    <section class="section">
+        <div class="container">
+            <div class="cta-strip reveal">
+                <div>
+                    <h4 style="margin:0 0 6px; font-weight:800; color:#fff;">Ready to get started?</h4>
+                    <div style="opacity:.9">Create your account and apply today.</div>
+                </div>
+                <div><a href="#" id="openRegisterBottom" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Register Now</a></div>
+            </div>
+        </div>
+    </section>
 
     <div class="about reveal" id="about">
         <h2>About Us</h2>
@@ -304,9 +378,32 @@ $result = $conn->query($sql);
         </div>
     </div>
 
-    <div class="footer">
-        <p>&copy; 2025 NEUST Gabaldon. All Rights Reserved.</p>
-    </div>
+    <footer class="footer">
+        <div class="container footer-grid">
+            <div>
+                <strong>NEUST Student Services</strong>
+                <p class="section-sub">All-in-one portal for students.</p>
+                <div class="socials" aria-label="Social links">
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                </div>
+            </div>
+            <div>
+                <strong>Explore</strong>
+                <div><a href="rooms.php">Rooms</a></div>
+                <div><a href="#features">Features</a></div>
+                <div><a href="#how">How it works</a></div>
+            </div>
+            <div>
+                <strong>Support</strong>
+                <div><a href="#" id="openLoginFooter">Login</a></div>
+                <div><a href="#" id="openRegisterFooter">Register</a></div>
+                <div><a href="mailto:support@example.com">Contact</a></div>
+            </div>
+        </div>
+        <div class="container" style="margin-top:12px; color:var(--muted);">&copy; 2025 NEUST Gabaldon. All Rights Reserved.</div>
+    </footer>
     
     <!-- Overlay Modals -->
     <style>
@@ -342,91 +439,14 @@ $result = $conn->query($sql);
         </div>
     </div>
     
+    <!-- Splide + Landing JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <script src="assets/js/landing.js"></script>
     <script>
-        $(document).ready(function(){
-            $('.slideshow-container').slick({
-                dots: true, 
-                infinite: true,
-                speed: 500,
-                autoplay: true,
-                autoplaySpeed: 3000,
-                prevArrow: '<button class="slick-prev">&#10094;</button>',
-                nextArrow: '<button class="slick-next">&#10095;</button>'
-            });
-            // CTA buttons open modals
-            $('#ctaLogin').on('click', function(){ $('#openLogin').trigger('click'); });
-            $('#ctaRegister').on('click', function(){ $('#openRegister').trigger('click'); });
-            // reveal on scroll
-            function onScrollReveal(){
-                const wh = window.innerHeight;
-                $('.reveal').each(function(){
-                    const rect = this.getBoundingClientRect();
-                    if (rect.top < wh - 60) this.classList.add('show');
-                });
-            }
-            onScrollReveal();
-            document.addEventListener('scroll', onScrollReveal, { passive: true });
-            function openOverlay(id, src){
-                const $overlay = $('#'+id);
-                $overlay.css('display','flex');
-                // Wait a tick to allow transition to apply
-                requestAnimationFrame(()=>{ $overlay.addClass('open'); });
-                if (src) {
-                    const $frame = $overlay.find('iframe');
-                    if ($frame.attr('src') !== src) $frame.attr('src', src);
-                }
-                $('body').css('overflow','hidden').addClass('modal-blur');
-            }
-            function closeOverlay(id){
-                const $overlay = $('#'+id);
-                $overlay.removeClass('open');
-                setTimeout(()=>{ $overlay.hide(); }, 220);
-                $('body').css('overflow','auto').removeClass('modal-blur');
-            }
-            $('#openLogin').on('click', function(e){ e.preventDefault(); openOverlay('loginOverlay', 'login.php'); });
-            $('#openRegister').on('click', function(e){ e.preventDefault(); openOverlay('registerOverlay', 'register.php'); });
-            $('[data-close]').on('click', function(){ closeOverlay($(this).data('close')); });
-            // backdrop click to close
-            $('.overlay-backdrop').on('click', function(e){ if (e.target === this) { closeOverlay(this.id); } });
-            // prevent clicks inside modal from closing
-            $('.overlay-modal').on('click', function(e){ e.stopPropagation(); });
-            $(document).on('keydown', function(e){ if (e.key === 'Escape'){ closeOverlay('loginOverlay'); closeOverlay('registerOverlay'); }});
-            // bubble iframe redirects to top-level when logged in
-            const dashboards = [
-                'admin_dashboard.php','student_dashboard.php','faculty_dashboard.php','scholarship_admin_dashboard.php','guidance_admin_dashboard.php','admin_dormitory_dashboard.php','registrar_dashboard.php'
-            ];
-            $('#loginFrame').on('load', function(){
-                try {
-                    const href = this.contentWindow.location.href;
-                    for (const page of dashboards){
-                        if (href.indexOf(page) !== -1){ window.location.href = href; return; }
-                    }
-                } catch(err) {}
-            });
-
-            // Listen for messages from iframes (e.g., registration success -> open login)
-            window.addEventListener('message', function(ev){
-                if (!ev.data || typeof ev.data !== 'object') return;
-                if (ev.data.type === 'openLogin') {
-                    closeOverlay('registerOverlay');
-                    openOverlay('loginOverlay', 'login.php');
-                    const prefill = ev.data.payload && ev.data.payload.prefill;
-                    if (prefill) {
-                        const frame = document.getElementById('loginFrame');
-                        const tryPrefill = () => {
-                            try {
-                                const doc = frame.contentWindow.document;
-                                const input = doc.querySelector('input[name="user_id"]');
-                                if (input) { input.value = prefill; return true; }
-                            } catch(e) {}
-                            return false;
-                        };
-                        if (!tryPrefill()) {
-                            frame.addEventListener('load', tryPrefill, { once: true });
-                        }
-                    }
-                }
-            });
+        // Initialize rooms carousel
+        document.addEventListener('DOMContentLoaded', function(){
+            var el = document.querySelector('.splide');
+            if (el) new Splide(el, { type:'loop', perPage:3, gap:'14px', autoplay:true, interval:3500, pauseOnHover:true, breakpoints:{ 1000:{ perPage:2 }, 640:{ perPage:1 } } }).mount();
         });
     </script>
 </body>
