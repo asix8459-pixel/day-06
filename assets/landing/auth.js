@@ -67,6 +67,21 @@ var AuthUI=(function(){
         setTimeout(function(){ circle.remove(); }, 600);
       });
     });
+    // Focus trap inside overlay
+    try{
+      var focusable = overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (first) first.focus();
+      overlay.addEventListener('keydown', function(e){
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey){
+          if (document.activeElement === first){ e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last){ e.preventDefault(); first.focus(); }
+        }
+      });
+    }catch(e){}
   }
   return { init:init, open:open, close:close };
 })();

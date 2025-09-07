@@ -44,6 +44,10 @@ require_once __DIR__ . '/csrf.php';
         .landing-page .slick-dots { bottom: 15px; }
         .landing-page .slick-dots li button:before { color: #fff; font-size: 15px; }
         .landing-page .slick-dots li.slick-active button:before { color: #ffd700; }
+        @media (max-width: 640px){
+            .landing-page .slick-prev { left: 12px; }
+            .landing-page .slick-next { right: 12px; }
+        }
     </style>
 </head>
 <body class="landing-page">
@@ -103,14 +107,22 @@ require_once __DIR__ . '/csrf.php';
             <h3 class="section-title">Announcements</h3>
             <p class="section-sub">Latest updates and news from NEUST Gabaldon.</p>
             <div class="slideshow-container reveal" aria-label="Announcements slideshow">
-                <?php mysqli_data_seek($result, 0); while ($row = $result->fetch_assoc()): ?>
+                <?php mysqli_data_seek($result, 0); if ($result && $result->num_rows > 0): while ($row = $result->fetch_assoc()): ?>
                     <div class="slide">
                         <a href="announcement_details.php?id=<?= htmlspecialchars($row['id']) ?>">
-                            <img src="uploads/announcements/<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['title']) ?>" loading="lazy">
+                            <img src="uploads/announcements/<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['title']) ?>" loading="lazy" onerror="this.onerror=null;this.src='assets/logo.png';">
                             <div class="caption"><?= htmlspecialchars($row['title']) ?></div>
                         </a>
                     </div>
-                <?php endwhile; ?>
+                <?php endwhile; else: ?>
+                    <div class="slide">
+                        <div class="card" style="padding:20px; text-align:center;">
+                            <img src="assets/logo.png" alt="NEUST" loading="lazy" style="width:90px; margin:10px auto 6px; opacity:.9;">
+                            <div style="font-weight:700;">No announcements yet</div>
+                            <div class="section-sub">Please check back later.</div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
             <div style="margin-top:12px"><a href="student_announcement.php" class="btn btn-primary"><i class="fa-solid fa-bullhorn"></i> View Announcements</a></div>
         </div>
