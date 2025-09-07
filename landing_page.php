@@ -309,14 +309,24 @@ $result = $conn->query($sql);
     
     <!-- Overlay Modals -->
     <style>
-        .overlay-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 1050; }
-        .overlay-modal { width: 90%; max-width: 980px; height: 85vh; background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.35); overflow: hidden; position: relative; }
+        .overlay-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 1050; opacity: 0; transition: opacity .25s ease; }
+        .overlay-backdrop.open { opacity: 1; }
+        .overlay-modal { width: 90%; max-width: 980px; height: 85vh; background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.35); overflow: hidden; position: relative; transform: translateY(16px) scale(.98); opacity: 0; transition: transform .3s ease, opacity .3s ease; }
+        .overlay-backdrop.open .overlay-modal { transform: translateY(0) scale(1); opacity: 1; }
         .overlay-header { position: absolute; top: 0; left: 0; right: 0; height: 50px; background: rgb(2, 31, 61); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
         .overlay-title { font-weight: 700; }
         .overlay-close { background: transparent; border: none; color: #fff; font-size: 22px; cursor: pointer; }
         .overlay-body { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; }
         .overlay-body iframe { width: 100%; height: 100%; border: 0; }
         @media (max-width: 768px){ .overlay-modal{ width: 96%; height: 90vh; } }
+
+        /* Background blur when modal open */
+        body.modal-blur .navbar,
+        body.modal-blur .hero,
+        body.modal-blur .slideshow-container,
+        body.modal-blur .about,
+        body.modal-blur .services,
+        body.modal-blur .footer { filter: blur(6px) brightness(.9); transition: filter .25s ease; pointer-events: none; }
     </style>
     <div class="overlay-backdrop" id="loginOverlay" aria-hidden="true">
         <div class="overlay-modal" role="dialog" aria-modal="true" aria-labelledby="loginOverlayTitle">
@@ -358,22 +368,25 @@ $result = $conn->query($sql);
             function openOverlay(id, src){
                 const $overlay = $('#'+id);
                 $overlay.css('display','flex');
+                // Wait a tick to allow transition to apply
+                requestAnimationFrame(()=>{ $overlay.addClass('open'); });
                 if (src) {
                     const $frame = $overlay.find('iframe');
                     if ($frame.attr('src') !== src) $frame.attr('src', src);
                 }
-                $('body').css('overflow','hidden');
+                $('body').css('overflow','hidden').addClass('modal-blur');
             }
             function closeOverlay(id){
                 const $overlay = $('#'+id);
-                $overlay.hide();
-                $('body').css('overflow','auto');
+                $overlay.removeClass('open');
+                setTimeout(()=>{ $overlay.hide(); }, 220);
+                $('body').css('overflow','auto').removeClass('modal-blur');
             }
             $('#openLogin').on('click', function(e){ e.preventDefault(); openOverlay('loginOverlay', 'login.php'); });
             $('#openRegister').on('click', function(e){ e.preventDefault(); openOverlay('registerOverlay', 'register.php'); });
             $('[data-close]').on('click', function(){ closeOverlay($(this).data('close')); });
             // backdrop click to close
-            $('.overlay-backdrop').on('click', function(e){ if (e.target === this) { $(this).hide(); $('body').css('overflow','auto'); } });
+            $('.overlay-backdrop').on('click', function(e){ if (e.target === this) { closeOverlay(this.id); } });
             // prevent clicks inside modal from closing
             $('.overlay-modal').on('click', function(e){ e.stopPropagation(); });
             $(document).on('keydown', function(e){ if (e.key === 'Escape'){ closeOverlay('loginOverlay'); closeOverlay('registerOverlay'); }});
