@@ -39,9 +39,12 @@ var AuthUI=(function(){
     // Intercept lightweight register to full form page
     var regForm = qs('registerLite');
     if (regForm) {
-      regForm.addEventListener('submit', function(e){
-        e.preventDefault(); window.location.href = 'register.php';
-      });
+      var steps = regForm.querySelectorAll('.reg-step');
+      var step = 0;
+      function show(i){ steps.forEach(function(s,idx){ s.style.display = idx===i ? '' : 'none'; }); }
+      show(step);
+      regForm.querySelectorAll('.reg-next').forEach(function(btn){ btn.addEventListener('click', function(){ step = Math.min(step+1, steps.length-1); show(step); }); });
+      regForm.querySelectorAll('.reg-prev').forEach(function(btn){ btn.addEventListener('click', function(){ step = Math.max(step-1, 0); show(step); }); });
     }
 
     // Show/Hide password toggles

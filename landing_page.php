@@ -275,7 +275,7 @@ require_once __DIR__ . '/csrf.php';
                     </form>
                 </div>
             </div>
-            <!-- Right: Sign Up -->
+            <!-- Right: Sign Up (Full form embedded) -->
             <div class="auth-side auth-right">
                 <div id="authPaneRegister" class="auth-pane hidden">
                     <img src="assets/logo.png" alt="NEUST Logo" class="auth-logo" loading="lazy">
@@ -283,19 +283,71 @@ require_once __DIR__ . '/csrf.php';
                     <div class="auth-sub">Join and get started</div>
                     <form class="auth-form" method="POST" action="register.php" id="registerLite">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
-                        <input class="auth-input" type="text" name="first_name" placeholder="First Name" required aria-label="First Name">
-                        <input class="auth-input" type="email" name="email" placeholder="Email" required aria-label="Email">
-                        <div class="auth-input-wrap">
-                            <input class="auth-input" type="password" id="regPwd" name="password" placeholder="Password" required aria-label="Password">
-                            <button type="button" class="auth-eye fa-solid fa-eye" data-eye="regPwd" aria-label="Show password"></button>
+                        <!-- Step 1: Personal -->
+                        <div class="reg-step" data-step="1">
+                            <input class="auth-input" type="text" name="user_id" placeholder="Student ID" required aria-label="Student ID">
+                            <input class="auth-input" type="text" name="first_name" placeholder="First Name" required aria-label="First Name">
+                            <input class="auth-input" type="text" name="middleName" placeholder="Middle Name" aria-label="Middle Name">
+                            <input class="auth-input" type="text" name="lastName" placeholder="Last Name" required aria-label="Last Name">
+                            <input class="auth-input" type="date" name="birthDate" required aria-label="Birth Date">
+                            <input class="auth-input" type="text" name="nationality" placeholder="Nationality" required aria-label="Nationality">
+                            <input class="auth-input" type="text" name="religion" placeholder="Religion" required aria-label="Religion">
+                            <select class="auth-input" name="biologicalSex" required aria-label="Biological Sex">
+                                <option value="">Select Biological Sex</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                            <input type="hidden" name="role" value="Student">
+                            <input class="auth-input" type="number" name="year" placeholder="Year" required aria-label="Year">
+                            <input class="auth-input" type="text" name="section" placeholder="Section" required aria-label="Section">
+                            <input class="auth-input" type="text" name="course" placeholder="Course" required aria-label="Course">
+                            <button class="auth-btn auth-btn-alt reg-next" type="button">Next</button>
                         </div>
-                        <button class="auth-btn auth-btn-alt" type="submit">Sign Up</button>
-                        <div class="auth-socials" aria-label="Social register">
-                            <a href="#" aria-label="Sign up with Google"><i class="fa-brands fa-google"></i></a>
-                            <a href="#" aria-label="Sign up with Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                            <a href="#" aria-label="Sign up with Apple"><i class="fa-brands fa-apple"></i></a>
+                        <!-- Step 2: Contact -->
+                        <div class="reg-step" data-step="2" style="display:none">
+                            <input class="auth-input" type="email" name="email" placeholder="Email" required aria-label="Email">
+                            <input class="auth-input" type="text" name="phone" placeholder="Phone Number" required aria-label="Phone Number">
+                            <input class="auth-input" type="text" name="currentAddress" placeholder="Current Address" required aria-label="Current Address">
+                            <input class="auth-input" type="text" name="permanentAddress" placeholder="Permanent Address" required aria-label="Permanent Address">
+                            <div style="display:flex; gap:10px">
+                                <button class="auth-btn reg-prev" type="button" style="background:#e5e7eb; color:#111827">Back</button>
+                                <button class="auth-btn auth-btn-alt reg-next" type="button">Next</button>
+                            </div>
                         </div>
-                        <div style="margin-top:8px">Have an account? <a href="#" id="toLogin" style="text-decoration:underline;">Sign in</a></div>
+                        <!-- Step 3: Family -->
+                        <div class="reg-step" data-step="3" style="display:none">
+                            <input class="auth-input" type="text" name="motherName" placeholder="Mother's Name" required aria-label="Mother's Name">
+                            <input class="auth-input" type="text" name="motherWork" placeholder="Mother's Work" required aria-label="Mother's Work">
+                            <input class="auth-input" type="text" name="motherContact" placeholder="Mother's Contact" required aria-label="Mother's Contact">
+                            <input class="auth-input" type="text" name="fatherName" placeholder="Father's Name" required aria-label="Father's Name">
+                            <input class="auth-input" type="text" name="fatherWork" placeholder="Father's Work" required aria-label="Father's Work">
+                            <input class="auth-input" type="text" name="fatherContact" placeholder="Father's Contact" required aria-label="Father's Contact">
+                            <input class="auth-input" type="number" name="siblingsCount" placeholder="Number of Siblings" required aria-label="Siblings Count">
+                            <div style="display:flex; gap:10px">
+                                <button class="auth-btn reg-prev" type="button" style="background:#e5e7eb; color:#111827">Back</button>
+                                <button class="auth-btn auth-btn-alt reg-next" type="button">Next</button>
+                            </div>
+                        </div>
+                        <!-- Step 4: Security -->
+                        <div class="reg-step" data-step="4" style="display:none">
+                            <div class="auth-input-wrap">
+                                <input class="auth-input" type="password" id="regPwd" name="password" placeholder="Password" required aria-label="Password">
+                                <button type="button" class="auth-eye fa-solid fa-eye" data-eye="regPwd" aria-label="Show password"></button>
+                            </div>
+                            <div style="font-size:12px; color:#6b7280">
+                                ✔ Minimum 8 characters • ✔ Uppercase • ✔ Lowercase • ✔ Number
+                            </div>
+                            <div style="display:flex; gap:10px">
+                                <button class="auth-btn reg-prev" type="button" style="background:#e5e7eb; color:#111827">Back</button>
+                                <button class="auth-btn auth-btn-alt" type="submit">Sign Up</button>
+                            </div>
+                            <div class="auth-socials" aria-label="Social register">
+                                <a href="#" aria-label="Sign up with Google"><i class="fa-brands fa-google"></i></a>
+                                <a href="#" aria-label="Sign up with Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#" aria-label="Sign up with Apple"><i class="fa-brands fa-apple"></i></a>
+                            </div>
+                            <div style="margin-top:8px">Have an account? <a href="#" id="toLogin" style="text-decoration:underline;">Sign in</a></div>
+                        </div>
                     </form>
                 </div>
             </div>
