@@ -48,36 +48,29 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
         .sidebar-menu a{display:block;color:#fff;text-decoration:none;margin:8px 14px;padding:12px 16px;border-radius:10px;background:#004080;transition:.12s ease}
         .sidebar-menu a:hover,.sidebar-menu a.active{background:#FFD700;color:#003366;transform:translateY(-1px)}
         .logout-btn{display:block;margin:32px 14px;padding:12px 16px;border-radius:10px;background:linear-gradient(90deg,#d9534f 60%,#c9302c 100%);color:#fff;text-decoration:none}
-        .main-content{margin-left:260px;padding:24px;width:calc(100% - 260px);min-height:100vh;background:radial-gradient(1200px 600px at 10% -20%,#1b2a52 0%,rgba(27,42,82,0) 60%),radial-gradient(800px 400px at 120% 0%,#0b5ed7 0%,rgba(11,94,215,0) 55%)}
-        .hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#003366 0%,#0b5ed7 100%);color:#fff;border-radius:20px;padding:28px;box-shadow:0 22px 60px rgba(2,32,71,.35)}
-        .hero h2{margin:0 0 6px;font-weight:900;letter-spacing:.3px;text-shadow:0 6px 22px rgba(0,0,0,.25)}
-        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:18px}
-        .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;box-shadow:0 18px 50px rgba(2,32,71,.45);backdrop-filter:blur(8px) saturate(120%);display:flex;align-items:center;gap:12px;transition:transform .15s, box-shadow .15s}
-        .stat:hover{transform:translateY(-2px);box-shadow:0 24px 70px rgba(2,32,71,.55)}
-        .stat .ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 26px rgba(2,32,71,.35)}
+        .main-content{margin-left:260px;padding:20px 24px 28px 24px;width:calc(100% - 260px);min-height:100vh;background:radial-gradient(1200px 600px at 10% -20%,#1b2a52 0%,rgba(27,42,82,0) 60%),radial-gradient(800px 400px at 120% 0%,#0b5ed7 0%,rgba(11,94,215,0) 55%)}
+        .hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#003366 0%,#0b5ed7 100%);color:#fff;border-radius:18px;padding:20px 22px;box-shadow:0 18px 54px rgba(2,32,71,.3);margin-bottom:14px}
+        .hero h2{margin:0 0 4px;font-weight:900;letter-spacing:.3px;text-shadow:0 4px 18px rgba(0,0,0,.25)}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+        .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;box-shadow:0 14px 44px rgba(2,32,71,.4);backdrop-filter:blur(8px) saturate(120%);display:flex;align-items:center;gap:10px}
+        .stat .ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 22px rgba(2,32,71,.35);font-size:16px}
         .ic-pending{background:linear-gradient(135deg,#f59f00,#ffcd39)}
         .ic-approved{background:linear-gradient(135deg,#12b886,#38d9a9)}
         .ic-rejected{background:linear-gradient(135deg,#e03131,#ff6b6b)}
         .ic-occupied{background:linear-gradient(135deg,#845ef7,#b197fc)}
         .ic-available{background:linear-gradient(135deg,#0d6efd,#74c0fc)}
         .stat .txt{color:#e2e8f0}
-        .stat .txt .k{font-weight:900;font-size:26px}
-        .stat .txt .l{font-size:12px;color:#cbd5e1;text-transform:uppercase;letter-spacing:.8px}
-        .card-glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;box-shadow:0 18px 50px rgba(2,32,71,.45);backdrop-filter:blur(8px) saturate(120%);color:#e2e8f0}
+        .stat .txt .k{font-weight:900;font-size:22px}
+        .stat .txt .l{font-size:11px;color:#cbd5e1;text-transform:uppercase;letter-spacing:.8px}
+        .card-glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;box-shadow:0 14px 44px rgba(2,32,71,.4);backdrop-filter:blur(8px) saturate(120%);color:#e2e8f0}
+        .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:14px}
         table{width:100%;border-collapse:collapse}
         thead th{position:sticky;top:0;background:rgba(255,255,255,.08);color:#cbd5e1;font-weight:700;padding:10px;border-bottom:1px solid rgba(255,255,255,.12)}
         tbody td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);color:#e2e8f0}
     </style>
     <script>
-        function navigateTo(page) {
-            window.location.href = page;
-        }
-
-        function logout() {
-            if (confirm("Are you sure you want to logout?")) {
-                window.location.href = "login.php";
-            }
-        }
+        function navigateTo(page) { window.location.href = page; }
+        function logout() { if (confirm("Are you sure you want to logout?")) { window.location.href = "login.php"; } }
     </script>
 </head>
 <body>
@@ -104,45 +97,79 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
         <div class="grid">
             <div class="stat" onclick="navigateTo('dormitory_manage_applications.php')">
                 <div class="ic ic-pending"><i class="fa-solid fa-hourglass-half"></i></div>
-                <div class="txt"><div class="k"><?= $pendingCount ?></div><div class="l">Pending Applications</div></div>
+                <div class="txt"><div class="k" id="mPending"><?= $pendingCount ?></div><div class="l">Pending Applications</div></div>
             </div>
             <div class="stat" onclick="navigateTo('approved_applications.php')">
                 <div class="ic ic-approved"><i class="fa-solid fa-check-circle"></i></div>
-                <div class="txt"><div class="k"><?= $approvedCount ?></div><div class="l">Approved</div></div>
+                <div class="txt"><div class="k" id="mApproved"><?= $approvedCount ?></div><div class="l">Approved</div></div>
             </div>
             <div class="stat" onclick="navigateTo('rejected_applications.php')">
                 <div class="ic ic-rejected"><i class="fa-solid fa-xmark"></i></div>
-                <div class="txt"><div class="k"><?= $rejectedCount ?></div><div class="l">Rejected</div></div>
+                <div class="txt"><div class="k" id="mRejected"><?= $rejectedCount ?></div><div class="l">Rejected</div></div>
             </div>
             <div class="stat" onclick="navigateTo('occupied_rooms.php')">
                 <div class="ic ic-occupied"><i class="fa-solid fa-bed"></i></div>
-                <div class="txt"><div class="k"><?= $occupiedBeds ?></div><div class="l">Occupied Beds</div></div>
+                <div class="txt"><div class="k" id="mOccupied"><?= $occupiedBeds ?></div><div class="l">Occupied Beds</div></div>
             </div>
             <div class="stat" onclick="navigateTo('available_rooms.php')">
                 <div class="ic ic-available"><i class="fa-solid fa-door-open"></i></div>
-                <div class="txt"><div class="k"><?= $availableBeds ?></div><div class="l">Available Beds</div></div>
+                <div class="txt"><div class="k" id="mAvailable"><?= $availableBeds ?></div><div class="l">Available Beds</div></div>
             </div>
         </div>
 
-        <div class="grid" style="margin-top:18px;">
+        <div class="charts">
             <div class="card-glass">
-                <h5 style="margin:0 0 10px; color:#fff;">Applications by Status</h5>
-                <canvas id="statusDonut" height="220"></canvas>
+                <h5 style="margin:0 0 8px; color:#fff;">Applications by Status</h5>
+                <canvas id="statusDonut" height="180"></canvas>
             </div>
             <div class="card-glass">
-                <h5 style="margin:0 0 10px; color:#fff;">Applications (Last 7 days)</h5>
-                <canvas id="appsLine" height="220"></canvas>
+                <h5 style="margin:0 0 8px; color:#fff;">Applications (Last 7 days)</h5>
+                <canvas id="appsLine" height="180"></canvas>
+            </div>
+            <div class="card-glass">
+                <h5 style="margin:0 0 8px; color:#fff;">Recent Applications</h5>
+                <table>
+                    <thead><tr><th>ID</th><th>Student</th><th>Room</th><th>Status</th><th>Applied</th></tr></thead>
+                    <tbody id="recentApps"></tbody>
+                </table>
             </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const donut = new Chart(document.getElementById('statusDonut'), {
-            type:'doughnut', data:{ labels:['Pending','Approved','Rejected'], datasets:[{ data:[<?= (int)$statusDist['Pending'] ?>,<?= (int)$statusDist['Approved'] ?>,<?= (int)$statusDist['Rejected'] ?>], backgroundColor:['#ffcd39','#38d9a9','#ff6b6b'], borderWidth:0 }] }, options:{ plugins:{legend:{labels:{color:'#e2e8f0'}}}, cutout:'65%'}
+            type:'doughnut',
+            data:{ labels:['Pending','Approved','Rejected'], datasets:[{ data:[<?= (int)$statusDist['Pending'] ?>,<?= (int)$statusDist['Approved'] ?>,<?= (int)$statusDist['Rejected'] ?>], backgroundColor:['#ffcd39','#38d9a9','#ff6b6b'], borderWidth:0 }] },
+            options:{ plugins:{legend:{labels:{color:'#e2e8f0'}}}, cutout:'70%'}
         });
         const line = new Chart(document.getElementById('appsLine'), {
-            type:'line', data:{ labels:[<?php echo implode(',', array_map(fn($x)=>'"'.date('M d', strtotime($x['d'])).'"', $appsByDay)); ?>], datasets:[{ label:'Apps', data:[<?php echo implode(',', array_map(fn($x)=>$x['c'], $appsByDay)); ?>], fill:true, tension:.35, borderColor:'#74c0fc', backgroundColor:'rgba(116,192,252,.18)', pointRadius:3, pointBackgroundColor:'#74c0fc' }] }, options:{ plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{ x:{ ticks:{color:'#cbd5e1'}}, y:{ ticks:{color:'#cbd5e1'} } } }
+            type:'line',
+            data:{ labels:[<?php echo implode(',', array_map(fn($x)=>'"'.date('M d', strtotime($x['d'])).'"', $appsByDay)); ?>], datasets:[{ label:'Apps', data:[<?php echo implode(',', array_map(fn($x)=>$x['c'], $appsByDay)); ?>], fill:true, tension:.35, borderColor:'#74c0fc', backgroundColor:'rgba(116,192,252,.18)', pointRadius:2.5, pointBackgroundColor:'#74c0fc' }] },
+            options:{ plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{ x:{ ticks:{color:'#cbd5e1'}}, y:{ ticks:{color:'#cbd5e1'} } } }
         });
+        // Live auto-refresh (60s)
+        async function refreshMetrics(){
+            try{
+                const r = await fetch('admin_dormitory_metrics.php');
+                const j = await r.json();
+                if (!j.success) return;
+                const d = j.data;
+                document.getElementById('mPending').textContent = d.pending;
+                document.getElementById('mApproved').textContent = d.approved;
+                document.getElementById('mRejected').textContent = d.rejected;
+                document.getElementById('mOccupied').textContent = d.occupiedBeds;
+                document.getElementById('mAvailable').textContent = d.availableBeds;
+                donut.data.datasets[0].data = [d.statusDist.Pending, d.statusDist.Approved, d.statusDist.Rejected];
+                donut.update('none');
+                line.data.labels = d.appsByDay.map(x=> new Date(x.d).toLocaleDateString(undefined,{month:'short',day:'2-digit'}));
+                line.data.datasets[0].data = d.appsByDay.map(x=> x.c);
+                line.update('none');
+                const tbody = document.getElementById('recentApps');
+                tbody.innerHTML = d.recent.map(r=> `<tr><td>${r.id}</td><td>${r.student}</td><td>${r.room}</td><td>${r.status}</td><td>${new Date(r.applied_at).toLocaleString()}</td></tr>`).join('');
+            }catch(e){/* ignore */}
+        }
+        refreshMetrics();
+        setInterval(refreshMetrics, 60000);
     </script>
 </body>
 </html>
