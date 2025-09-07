@@ -292,7 +292,7 @@ $result = $conn->query($sql);
         <div class="container">
             <h3 class="section-title">Announcements</h3>
             <p class="section-sub">Latest updates and news from NEUST Gabaldon.</p>
-            <div class="splide reveal" aria-label="Rooms preview">
+            <div class="splide reveal" aria-label="Announcements preview">
                 <div class="splide__track">
                     <ul class="splide__list">
                         <?php mysqli_data_seek($result, 0); $i=0; while (($row = $result->fetch_assoc()) && $i < 6): $i++; ?>
@@ -391,7 +391,7 @@ $result = $conn->query($sql);
             </div>
             <div>
                 <strong>Explore</strong>
-                <div><a href="rooms.php">Rooms</a></div>
+                <div><a href="student_announcement.php">Announcements</a></div>
                 <div><a href="#features">Features</a></div>
                 <div><a href="#how">How it works</a></div>
             </div>
