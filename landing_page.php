@@ -239,7 +239,7 @@ require_once __DIR__ . '/csrf.php';
         .reveal.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
-<body>
+<body class="landing-page">
     <nav class="nav">
         <div class="container nav-inner">
             <a class="brand" href="#" aria-label="NEUST Home">
