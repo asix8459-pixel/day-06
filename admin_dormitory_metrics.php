@@ -13,7 +13,10 @@ $metrics = [
     'occupiedBeds'=>0,'totalBeds'=>0,'availableBeds'=>0,
     'statusDist'=>['Pending'=>0,'Approved'=>0,'Rejected'=>0],
     'appsByDay'=>[],
-    'recent'=>[]
+    'recent'=>[],
+    'pendingPayments'=>0,
+    'verifiedThisMonth'=>0.0,
+    'paymentsByDay'=>[]
 ];
 
 // Counts
@@ -52,6 +55,18 @@ if ($recent) {
         ];
     }
 }
+
+// Payments: pending count and verified sum for current month
+$pp = $conn->query("SELECT COUNT(*) AS c FROM payments WHERE status='Pending'");
+$metrics['pendingPayments'] = $pp ? (int)($pp->fetch_assoc()['c'] ?? 0) : 0;
+$vm = $conn->query("SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE status='Verified' AND YEAR(submitted_at)=YEAR(CURDATE()) AND MONTH(submitted_at)=MONTH(CURDATE())");
+$metrics['verifiedThisMonth'] = $vm ? (float)($vm->fetch_assoc()['s'] ?? 0.0) : 0.0;
+
+// Payments by day (last 7 days, verified sums)
+$pmap = [];
+$pq = $conn->query("SELECT DATE(submitted_at) AS d, COALESCE(SUM(amount),0) AS s FROM payments WHERE status='Verified' AND submitted_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(submitted_at)");
+if ($pq) { while($r=$pq->fetch_assoc()){ $pmap[$r['d']] = (float)$r['s']; } }
+foreach ($days as $d) { $metrics['paymentsByDay'][] = ['d'=>$d, 's'=>round($pmap[$d] ?? 0.0, 2)]; }
 
 echo json_encode(['success'=>true,'data'=>$metrics]);
 ?>

@@ -147,10 +147,13 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
         </div>
         <div class="card-glass" style="margin-top:14px;">
             <h5 style="margin:0 0 8px; color:#fff;">Payments Summary</h5>
-            <div class="d-flex flex-wrap gap-3">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
                 <div><strong>Pending:</strong> <span id="sumPendingPay"><?= $pendingPayments ?></span></div>
                 <div><strong>Verified (<?= date('M Y') ?>):</strong> <span id="sumVerifiedMonth">₱<?= number_format($verifiedThisMonth, 2) ?></span></div>
                 <a class="btn btn-sm btn-light" href="admin_dorm_payments.php"><i class="fa-solid fa-arrow-right"></i> Manage Payments</a>
+            </div>
+            <div class="chart-box" style="height:220px; margin-top:10px;">
+                <canvas id="paySpark"></canvas>
             </div>
         </div>
     </div>
@@ -166,6 +169,11 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
             data:{ labels:[<?php echo implode(',', array_map(fn($x)=>'"'.date('M d', strtotime($x['d'])).'"', $appsByDay)); ?>], datasets:[{ label:'Apps', data:[<?php echo implode(',', array_map(fn($x)=>$x['c'], $appsByDay)); ?>], fill:true, tension:.35, borderColor:'#74c0fc', backgroundColor:'rgba(116,192,252,.18)', pointRadius:2.5, pointBackgroundColor:'#74c0fc' }] },
             options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{ x:{ ticks:{color:'#cbd5e1'}}, y:{ ticks:{color:'#cbd5e1'} } } }
         });
+        const paySpark = new Chart(document.getElementById('paySpark'), {
+            type:'line',
+            data:{ labels:[<?php echo implode(',', array_map(fn($x)=>'"'.date('M d', strtotime($x['d'])).'"', $appsByDay)); ?>], datasets:[{ label:'Verified ₱', data:[<?php echo implode(',', array_map(fn($x)=>0, $appsByDay)); ?>], fill:true, tension:.35, borderColor:'#40c057', backgroundColor:'rgba(64,192,87,.18)', pointRadius:2.5, pointBackgroundColor:'#40c057' }] },
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{ x:{ ticks:{color:'#cbd5e1'}}, y:{ ticks:{color:'#cbd5e1'} } } }
+        });
         async function refreshMetrics(){
             try{
                 const r = await fetch('admin_dormitory_metrics.php');
@@ -177,6 +185,12 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
                 line.data.labels = d.appsByDay.map(x=> new Date(x.d).toLocaleDateString(undefined,{month:'short',day:'2-digit'}));
                 line.data.datasets[0].data = d.appsByDay.map(x=> x.c); line.update('none');
                 recentApps.innerHTML = d.recent.map(r=> `<tr><td>${r.id}</td><td>${r.student}</td><td>${r.room}</td><td>${r.status}</td><td>${new Date(r.applied_at).toLocaleString()}</td></tr>`).join('');
+                // payments
+                document.getElementById('sumPendingPay').textContent = d.pendingPayments;
+                document.getElementById('sumVerifiedMonth').textContent = '₱' + (d.verifiedThisMonth.toFixed(2));
+                paySpark.data.labels = d.paymentsByDay.map(x=> new Date(x.d).toLocaleDateString(undefined,{month:'short',day:'2-digit'}));
+                paySpark.data.datasets[0].data = d.paymentsByDay.map(x=> x.s);
+                paySpark.update('none');
             }catch(e){}
         }
         const mPending = document.getElementById('mPending');
