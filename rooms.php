@@ -153,7 +153,34 @@ function render_amenities($amenities, $icons){
 <body>
     <?php include 'student_header.php'; ?>
     <div class="container mt-4">
-        <h2 class="text-center mb-4" style="color:var(--primary); font-weight:900; letter-spacing:.4px;">Premium Dorm Rooms</h2>
+        <h2 class="text-center mb-3" style="color:var(--primary); font-weight:900; letter-spacing:.4px;">Premium Dorm Rooms</h2>
+        <!-- Controls -->
+        <div class="mb-3 d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <input id="searchRooms" class="form-control" style="min-width:260px; border-radius:12px;" type="search" placeholder="Search rooms...">
+                <select id="sortRooms" class="form-select" style="border-radius:12px;">
+                    <option value="">Sort by</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="avail_desc">Availability</option>
+                </select>
+            </div>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filterAvail">
+                    <label class="form-check-label" for="filterAvail">Available only</label>
+                </div>
+                <select id="amenityFilter" class="form-select" style="border-radius:12px;">
+                    <option value="">Amenity: Any</option>
+                    <option value="wifi">WiFi</option>
+                    <option value="aircon">Aircon</option>
+                    <option value="bathroom">Bathroom</option>
+                    <option value="kitchen">Kitchen</option>
+                    <option value="locker">Locker</option>
+                    <option value="tv">TV</option>
+                </select>
+            </div>
+        </div>
         <?php if (!count($rooms)): ?>
         <div class="text-center" style="color:#64748b; padding:40px 0;">
             <div style="font-size:56px; opacity:.8; margin-bottom:12px;"><i class="fa-solid fa-bed"></i></div>
@@ -166,10 +193,13 @@ function render_amenities($amenities, $icons){
                 $available = max(0, (int)$row['total_beds'] - (int)$row['occupied_beds']);
                 $isAvail = $available > 0;
                 $statusClass = $isAvail ? 'status-chip' : 'status-chip full';
+                $amenStr = strtolower(trim($row['amenities'] ?? ''));
+                $price = (float)$row['price_per_month'];
             ?>
-            <div class="card room-card">
+            <div class="card room-card" data-name="<?= htmlspecialchars(strtolower($row['name'])) ?>" data-amenities="<?= htmlspecialchars($amenStr) ?>" data-available="<?= $isAvail ? '1':'0' ?>" data-price="<?= $price ?>">
                 <div style="position:relative;">
-                    <img src="<?= htmlspecialchars($row['image']) ?>" class="room-img" alt="Room image: <?= htmlspecialchars($row['name']) ?>" loading="lazy" width="1024" height="680" onerror="this.style.background='#e9ecef'; this.alt='Image unavailable';">
+                    <div class="skeleton" style="position:absolute; inset:0; background:linear-gradient(90deg, #eef2f7 25%, #f5f7fb 37%, #eef2f7 63%); background-size:400% 100%; animation: shimmer 1.2s infinite; border-bottom-left-radius:18px; border-bottom-right-radius:18px;"></div>
+                    <img src="<?= htmlspecialchars($row['image']) ?>" class="room-img" alt="Room image: <?= htmlspecialchars($row['name']) ?>" loading="lazy" width="1024" height="680" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.style.background='#e9ecef'; this.alt='Image unavailable';">
                     <span class="price-chip"><?= peso($row['price_per_month']) ?>/month</span>
                     <span class="<?= $statusClass ?>"><?= $isAvail ? '✅ Available' : '❌ Full' ?></span>
                 </div>
@@ -400,7 +430,57 @@ function render_amenities($amenities, $icons){
                 .catch(() => { showToast('error','Network error. Please try again.'); })
                 .finally(()=>{ submitBtn.disabled=false; submitBtn.innerHTML = oldHtml; });
             });
+
+            // Instant filters & sort
+            const search = document.getElementById('searchRooms');
+            const sort = document.getElementById('sortRooms');
+            const amen = document.getElementById('amenityFilter');
+            const onlyAvail = document.getElementById('filterAvail');
+            const cards = Array.from(document.querySelectorAll('.grid .room-card'));
+
+            function applyFilters(){
+                const q = (search.value||'').trim().toLowerCase();
+                const a = amen.value;
+                const avail = onlyAvail.checked;
+                let filtered = cards;
+                filtered.forEach(c=>{
+                    const name = c.dataset.name||'';
+                    const ams = c.dataset.amenities||'';
+                    const av = c.dataset.available==='1';
+                    let ok = true;
+                    if (q && !name.includes(q)) ok=false;
+                    if (a && !ams.includes(a)) ok=false;
+                    if (avail && !av) ok=false;
+                    c.style.display = ok ? 'inline-block' : 'none';
+                });
+                applySort();
+            }
+
+            function applySort(){
+                const v = sort.value;
+                if (!v) return;
+                const grid = document.querySelector('.grid');
+                const visible = cards.filter(c=>c.style.display!== 'none');
+                visible.sort((c1,c2)=>{
+                    const p1 = parseFloat(c1.dataset.price||'0');
+                    const p2 = parseFloat(c2.dataset.price||'0');
+                    const a1 = c1.dataset.available==='1'?1:0;
+                    const a2 = c2.dataset.available==='1'?1:0;
+                    if (v==='price_asc') return p1 - p2;
+                    if (v==='price_desc') return p2 - p1;
+                    if (v==='avail_desc') return a2 - a1;
+                    return 0;
+                });
+                visible.forEach(c=> grid.appendChild(c));
+            }
+
+            [search, sort, amen, onlyAvail].forEach(el=> el && el.addEventListener('input', applyFilters));
+            [sort].forEach(el=> el && el.addEventListener('change', applySort));
+            applyFilters();
         });
     </script>
+    <style>
+        @keyframes shimmer { 0%{ background-position: 0 0 } 100%{ background-position: -400% 0 } }
+    </style>
 </body>
 </html>
