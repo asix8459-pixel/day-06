@@ -1,5 +1,6 @@
 <?php 
 session_start();
+require_once __DIR__ . '/csrf.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -19,6 +20,9 @@ if ($conn->connect_error) {
 $successMessage = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!csrf_validate($_POST['csrf_token'] ?? null)) {
+        $successMessage = "Error: Invalid request.";
+    } else {
     $studentId = $_POST['user_id'];
     $firstName = $_POST['first_name'];
     $middleName = $_POST['middleName'];
@@ -70,6 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $checkStmt->close();
+    }
 }
 ?>
 
@@ -79,95 +84,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration Form</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background: url('assets/neust.jpg') no-repeat center center/cover;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #003366 0%, #00B8D4 100%);
             margin: 0;
         }
         .container {
-            width: 400px;
-            background: rgba(255, 255, 255, 0.94);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 1s ease-in-out;
+            width: 440px;
+            background: rgba(255, 255, 255, 0.96);
+            padding: 26px;
+            border-radius: 14px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+            animation: fadeIn .45s ease-in-out;
+            border: 1px solid rgba(0,0,0,.06);
         }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        .progress-bar {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .step {
-            width: 30px;
-            height: 30px;
-            background: lightgray;
-            color: black;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-weight: bold;
-            transition: background 0.3s, color 0.3s;
-        }
-        .step.active {
-            background: #007bff;
-            color: white;
-        }
+        .progress-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 16px; }
+        .step { height: 6px; background: rgba(2,44,86,.18); border-radius: 999px; overflow: hidden; position: relative; }
+        .step.active::after, .step.done::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #00B8D4, #003366); animation: fill .35s ease forwards; }
+        @keyframes fill { from { transform: translateX(-100%);} to { transform: translateX(0);} }
         .form-step {
             display: none;
         }
         .form-step.active {
             display: block;
         }
-        .error {
-            color: red;
-            font-size: 12px;
-            display: none;
-            margin-top: 4px;
-        }
-        .password-requirements {
-            font-size: 12px;
-            color: gray;
-        }
+        .error { color: #b91c1c; font-size: 12px; display: none; margin-top: 4px; }
+        .password-requirements { font-size: 12px; color: #6b7280; }
         .password-requirements span {
             display: block;
         }
-        button {
-            padding: 10px;
-            margin-top: 10px;
-            border: none;
-            background: #007bff;
-            color: white;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        input:focus, select:focus {
-            border-color: #007bff;
-            outline: none;
-        }
+        button { padding: 12px; margin-top: 10px; border: none; background: linear-gradient(135deg, #FFD166, #ffc84a); color: #1b2735; cursor: pointer; border-radius: 10px; transition: transform .15s ease, filter .2s ease; width: 100%; font-weight: 700; }
+        button:hover { filter: brightness(1.05); transform: translateY(-1px); }
+        input, select { width: 100%; padding: 12px; margin: 6px 0 2px; border: 1px solid #cfd8dc; border-radius: 10px; box-sizing: border-box; background: rgba(255,255,255,.98); font-size: 15px; }
+        input:focus, select:focus { border-color: #00B8D4; outline: none; box-shadow: 0 0 0 4px rgba(0,184,212,.18); }
         h2 {
             margin-bottom: 20px;
             color: #333;
@@ -176,13 +135,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             text-align: center;
             margin-top: 20px;
         }
-        p a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        p a:hover {
-            text-decoration: underline;
-        }
+        p a { color: #003366; text-decoration: none; }
+        p a:hover { text-decoration: underline; }
+        .input-wrap{position:relative}
+        .eye{position:absolute; right:12px; top:50%; transform:translateY(-50%); background:transparent; border:0; color:#6b7280; cursor:pointer}
+        .eye:hover{color:#475569}
     </style>
 </head>
 <body>
@@ -194,6 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="step">4</div>
         </div>
         <form id="registrationForm" method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
             <div class="form-step active">
                 <h2>Personal Information</h2>
                 <input type="text" id="studentId" name="user_id" placeholder="Student ID" required>
@@ -243,14 +201,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div class="form-step">
                 <h2>Account Security</h2>
-                <input type="password" id="password" name="password" placeholder="Password" required>
+                <div class="input-wrap">
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                    <button type="button" class="eye fa-solid fa-eye" aria-label="Show password" data-eye="password"></button>
+                </div>
                 <div class="password-requirements">
                     <span>✔ Minimum 8 characters</span>
                     <span>✔ At least one uppercase letter</span>
                     <span>✔ At least one lowercase letter</span>
                     <span>✔ At least one number</span>
                 </div>
-                <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                <div class="input-wrap">
+                    <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                    <button type="button" class="eye fa-solid fa-eye" aria-label="Show password" data-eye="confirmPassword"></button>
+                </div>
                 <span class="error" id="passwordMatchError">Passwords do not match.</span>
                 <button type="button" class="prev">Previous</button>
                 <button type="submit">Submit</button>
@@ -270,6 +234,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 formSteps.forEach((step, index) => {
                     step.classList.toggle("active", index === currentStep);
                     steps[index].classList.toggle("active", index === currentStep);
+                    steps[index].classList.toggle("done", index < currentStep);
                 });
             }
 
@@ -304,6 +269,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 } else {
                     passwordError.style.display = "none";
                 }
+            });
+
+            // Show/hide password
+            document.querySelectorAll('.eye').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const id = btn.getAttribute('data-eye');
+                    const input = document.getElementById(id);
+                    if (!input) return;
+                    input.type = input.type === 'password' ? 'text' : 'password';
+                    btn.classList.toggle('fa-eye-slash');
+                });
             });
         });
     </script>
