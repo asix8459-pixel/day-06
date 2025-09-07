@@ -17,7 +17,8 @@ $metrics = [
     'pendingPayments'=>0,
     'verifiedThisMonth'=>0.0,
     'paymentsByDay'=>[],
-    'monthLabel'=> date('M Y')
+    'monthLabel'=> date('M Y'),
+    'appsMonthLabel'=> date('M Y')
 ];
 
 // Counts
@@ -31,17 +32,36 @@ if ($r && ($row=$r->fetch_assoc())) {
 foreach (['Pending','Approved','Rejected'] as $st) {
     $q = $conn->query("SELECT COUNT(*) AS c FROM student_room_applications WHERE status='".$conn->real_escape_string($st)."'");
     $c = $q ? (int)($q->fetch_assoc()['c'] ?? 0) : 0;
-    $metrics[strtolower($st)] = $c;
-    $metrics['statusDist'][$st] = $c;
+    $metrics[strtolower($st)] = $c; // global counts remain
 }
 
-// Apps by last 7 days
-$days = [];
-for ($i=6;$i>=0;$i--) { $days[] = date('Y-m-d', strtotime('-'.$i.' day')); }
+// Applications month filter (for charts)
+$appsMonthParam = $_GET['apps_month'] ?? '';
+if (preg_match('/^\d{4}-\d{2}$/', $appsMonthParam)) {
+    $appsYear = (int)substr($appsMonthParam, 0, 4);
+    $appsMonth = (int)substr($appsMonthParam, 5, 2);
+} else {
+    $appsYear = (int)date('Y');
+    $appsMonth = (int)date('m');
+}
+$metrics['appsMonthLabel'] = date('M Y', strtotime(sprintf('%04d-%02d-01', $appsYear, $appsMonth)));
+$appsStart = sprintf('%04d-%02d-01', $appsYear, $appsMonth);
+$appsEnd = date('Y-m-t', strtotime($appsStart));
+
+// Status distribution for selected month
+$metrics['statusDist'] = ['Pending'=>0,'Approved'=>0,'Rejected'=>0];
+$q = $conn->query("SELECT `status`, COUNT(*) AS c FROM student_room_applications WHERE applied_at BETWEEN '".$conn->real_escape_string($appsStart)."' AND '".$conn->real_escape_string($appsEnd)."' GROUP BY `status`");
+if ($q) { while($r=$q->fetch_assoc()){ $s=$r['status']; if(isset($metrics['statusDist'][$s])) $metrics['statusDist'][$s]=(int)$r['c']; } }
+
+// Applications by day for selected month
 $map = [];
-$q2 = $conn->query("SELECT DATE(applied_at) AS d, COUNT(*) AS c FROM student_room_applications WHERE applied_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(applied_at)");
+$q2 = $conn->query("SELECT DATE(applied_at) AS d, COUNT(*) AS c FROM student_room_applications WHERE applied_at BETWEEN '".$conn->real_escape_string($appsStart)."' AND '".$conn->real_escape_string($appsEnd)."' GROUP BY DATE(applied_at)");
 if ($q2) { while($r=$q2->fetch_assoc()){ $map[$r['d']] = (int)$r['c']; } }
-foreach ($days as $d) { $metrics['appsByDay'][] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
+$daysInAppsMonth = (int)date('t', strtotime($appsStart));
+for ($d=1; $d<=$daysInAppsMonth; $d++) {
+    $dateStr = sprintf('%04d-%02d-%02d', $appsYear, $appsMonth, $d);
+    $metrics['appsByDay'][] = ['d'=>$dateStr, 'c'=>($map[$dateStr] ?? 0)];
+}
 
 // Recent applications
 $recent = $conn->query("SELECT sra.id, sra.user_id, u.first_name, u.last_name, sra.room_id, r.name AS room_name, sra.status, sra.applied_at FROM student_room_applications sra JOIN users u ON sra.user_id=u.user_id JOIN rooms r ON sra.room_id=r.id ORDER BY sra.applied_at DESC LIMIT 6");

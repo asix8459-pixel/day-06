@@ -134,11 +134,17 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
 
         <div class="charts">
             <div class="card-glass">
-                <h5 style="margin:0 0 8px; color:#fff;">Applications by Status</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 style="margin:0 0 8px; color:#fff;">Applications by Status</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="appsMonth" class="form-label mb-0" style="color:#cbd5e1; font-size:12px;">Month</label>
+                        <input type="month" id="appsMonth" class="form-control form-control-sm" style="border-radius:8px; background:rgba(255,255,255,.9);" value="<?= date('Y-m') ?>">
+                    </div>
+                </div>
                 <div class="chart-box"><canvas id="statusDonut"></canvas></div>
             </div>
             <div class="card-glass">
-                <h5 style="margin:0 0 8px; color:#fff;">Applications (Last 7 days)</h5>
+                <h5 style="margin:0 0 8px; color:#fff;">Applications (Selected Month)</h5>
                 <div class="chart-box"><canvas id="appsLine"></canvas></div>
             </div>
         </div>
@@ -184,10 +190,11 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
             data:{ labels:[], datasets:[{ label:'Verified ₱', data:[], fill:true, tension:.35, borderColor:'#40c057', backgroundColor:'rgba(64,192,87,.18)', pointRadius:2.5, pointBackgroundColor:'#40c057' }] },
             options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{ x:{ ticks:{color:'#cbd5e1'}}, y:{ ticks:{color:'#cbd5e1'} } } }
         });
-        async function refreshMetrics(month){
+        async function refreshMetrics(appsMonthVal, payMonthVal){
             try{
                 const url = new URL('admin_dormitory_metrics.php', window.location.href);
-                if (month) url.searchParams.set('month', month);
+                if (appsMonthVal) url.searchParams.set('apps_month', appsMonthVal);
+                if (payMonthVal) url.searchParams.set('month', payMonthVal);
                 const r = await fetch(url.toString());
                 const j = await r.json();
                 if (!j.success) return;
@@ -213,9 +220,11 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
         const mAvailable = document.getElementById('mAvailable');
         const recentApps = document.getElementById('recentApps');
         const payMonth = document.getElementById('payMonth');
-        refreshMetrics(payMonth.value);
-        setInterval(()=>refreshMetrics(payMonth.value), 60000);
-        payMonth.addEventListener('change', ()=> refreshMetrics(payMonth.value));
+        const appsMonth = document.getElementById('appsMonth');
+        refreshMetrics(appsMonth.value, payMonth.value);
+        setInterval(()=>refreshMetrics(appsMonth.value, payMonth.value), 60000);
+        payMonth.addEventListener('change', ()=> refreshMetrics(appsMonth.value, payMonth.value));
+        appsMonth.addEventListener('change', ()=> refreshMetrics(appsMonth.value, payMonth.value));
     </script>
 </body>
 </html>
