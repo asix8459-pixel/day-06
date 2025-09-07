@@ -126,13 +126,13 @@ foreach($days as $d){ $appsByDay[] = ['d'=>$d, 'c'=>($map[$d] ?? 0)]; }
                 <h5 style="margin:0 0 8px; color:#fff;">Applications (Last 7 days)</h5>
                 <canvas id="appsLine" height="180"></canvas>
             </div>
-            <div class="card-glass">
-                <h5 style="margin:0 0 8px; color:#fff;">Recent Applications</h5>
-                <table>
-                    <thead><tr><th>ID</th><th>Student</th><th>Room</th><th>Status</th><th>Applied</th></tr></thead>
-                    <tbody id="recentApps"></tbody>
-                </table>
-            </div>
+        </div>
+        <div class="card-glass" style="margin-top:14px;">
+            <h5 style="margin:0 0 8px; color:#fff;">Recent Applications</h5>
+            <table>
+                <thead><tr><th>ID</th><th>Student</th><th>Room</th><th>Status</th><th>Applied</th></tr></thead>
+                <tbody id="recentApps"></tbody>
+            </table>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
