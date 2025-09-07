@@ -1,13 +1,6 @@
 <?php
 
 include 'config.php'; // Ensure this connects to your database properly
-include 'csrf.php';
-
-// Require Power Admin role
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Power Admin') {
-    header('Location: login.php');
-    exit;
-}
 
 $query = "SELECT * FROM users";
 $result = $conn->query($query);
@@ -141,7 +134,7 @@ $result = $conn->query($query);
                 <li><a href="admin_dashboard.php" ><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
                 <li><a href="power_admin_announcement.php"><i class="fas fa-bullhorn"></i> Announcements</a></li>
                 <li><a href="power_admin_users.php" class="active"><i class="fas fa-users"></i> Users</a></li>
-                <li><a href="power_admin_manage_grievances.php"><i class="fas fa-exclamation-triangle"></i> Grievances</a></li>
+                <li><a href="#><i class="fas fa-exclamation-triangle"></i> Grievances</a></li>
                 
                 <li>
                     <a href="#"><i class="fas fa-user-shield"></i> Manage Admin <i class="fas fa-caret-down"></i></a>
@@ -226,7 +219,6 @@ $result = $conn->query($query);
                             <form action="update_status.php" method="POST" style="display:inline;">
                                 <input type="hidden" name="user_id" value="<?php echo $row['user_id']; ?>">
                                 <input type="hidden" name="new_status" value="<?php echo ($row['status'] == 'Active') ? 'Inactive' : 'Active'; ?>">
-                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                 <button type="submit" class="<?php echo ($row['status'] == 'Active') ? 'deactivate-btn' : 'activate-btn'; ?>">
                                     <?php echo ($row['status'] == 'Active') ? 'Deactivate' : 'Activate'; ?>
                                 </button>
@@ -235,7 +227,6 @@ $result = $conn->query($query);
                             <!-- Reset Password Form -->
                             <form action="reset_password.php" method="POST" style="display:inline;">
                                 <input type="hidden" name="user_id" value="<?php echo $row['user_id']; ?>">
-                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                 <button type="submit" class="reset-btn">Reset Password</button>
                             </form>
                         </td>

@@ -1,9 +1,5 @@
 <?php
 
-include 'csrf.php';
-session_start();
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Power Admin') { header('Location: login.php'); exit; }
-
 $host = "localhost";
 $user = "root";
 $password = "";
@@ -17,8 +13,6 @@ if ($conn->connect_error) {
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (!csrf_validate($_POST['csrf_token'] ?? null)) { $message = "Invalid CSRF token"; }
-    else {
     if (isset($_POST['add'])) {
         $title = !empty($_POST['title']) ? $_POST['title'] : "No Title";
         $targetDir = "uploads/announcements/";
@@ -98,7 +92,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Error updating announcement!";
             }
         }
-    }
     }
 }
 
@@ -280,7 +273,6 @@ function isActive($page) {
         <main class="main-content">
             <h2>Manage Announcements</h2>
             <form action="" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                 <label>Title:</label>
                 <input type="text" name="title">
                 <label>Image:</label>
@@ -314,7 +306,6 @@ function isActive($page) {
             <span class="close" onclick="closeEditModal()">&times;</span>
             <h3>Edit Announcement</h3>
             <form action="" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                 <input type="hidden" id="editId" name="id">
                 <label>Title:</label>
                 <input type="text" id="editTitle" name="title">
@@ -333,7 +324,6 @@ function isActive($page) {
             <h3>Confirm Delete</h3>
             <p>Are you sure you want to delete this announcement?</p>
             <form action="" method="POST">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                 <input type="hidden" id="deleteId" name="id">
                 <button type="submit" name="delete" class="btn btn-delete">Delete</button>
                 <button type="button" class="btn" style="background: blue;" onclick="closeDeleteModal()">Cancel</button>

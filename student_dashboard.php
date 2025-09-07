@@ -76,11 +76,6 @@ $conn->close();
 				<p>Appointments</p>
 				<span><?php echo htmlspecialchars(intval($appointments)); ?></span>
 			</a>
-			<a href="guidance_request.php" class="stat-card">
-				<i class="fas fa-headset"></i>
-				<p>Request Guidance</p>
-				<span>New</span>
-			</a>
 			<a href="track_applications.php" class="stat-card">
 				<i class="fas fa-graduation-cap"></i>
 				<p>Scholarships</p>

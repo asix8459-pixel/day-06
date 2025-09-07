@@ -1,11 +1,18 @@
 <?php
-include 'config.php';
-include 'csrf.php';
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Power Admin') { header('Location: login.php'); exit; }
+session_start();
+$host = "localhost";
+$user = "root";
+$password = "";
+$dbname = "student_services_db";
+
+$conn = new mysqli($host, $user, $password, $dbname);
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
 
 // Handle actions (resolve, reject)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_POST['id'])) {
-    if (!csrf_validate($_POST['csrf_token'] ?? null)) { http_response_code(403); exit('Invalid CSRF token'); }
     $action = $_POST['action'];
     $id = intval($_POST['id']);
 
@@ -31,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_
         $subject = "Grievance Status Updated";
         $message = "Your grievance (ID: $id) has been " . ($action === 'resolve' ? 'resolved' : 'rejected') . ".";
         $headers = "From: no-reply@yourdomain.com";
-        @mail($email, $subject, $message, $headers);
+        mail($email, $subject, $message, $headers);
 
         $stmt->close();
     }
@@ -81,15 +88,13 @@ $result = $conn->query("SELECT g.id, g.title, g.description, g.status, g.submiss
                             <td><?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?></td>
                             <td>
                                 <?php if ($row['status'] == 'pending'): ?>
-                                    <form method="POST" action="power_admin_manage_grievances.php" style="display:inline;">
+                                    <form method="POST" action="manage_grievances.php" style="display:inline;">
                                         <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                         <input type="hidden" name="action" value="resolve">
                                         <button type="submit" class="btn btn-success btn-sm">Resolve</button>
                                     </form>
-                                    <form method="POST" action="power_admin_manage_grievances.php" style="display:inline;">
+                                    <form method="POST" action="manage_grievances.php" style="display:inline;">
                                         <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                         <input type="hidden" name="action" value="reject">
                                         <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                     </form>

@@ -10,18 +10,13 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['Guidanc
 
 // Fetch guidance requests for the logged-in admin/counselor
 $user_id = $_SESSION['user_id'];
-$baseQuery = "SELECT appointments.*, students.first_name AS student_first_name, students.last_name AS student_last_name
+$query = "SELECT appointments.*, students.first_name AS student_first_name, students.last_name AS student_last_name
           FROM appointments
           JOIN users AS students ON appointments.student_id = students.user_id
-          WHERE appointments.user_id = ?";
-$params = [$user_id];
-$types = 's';
-if (!empty($_GET['status'])) { $baseQuery .= " AND LOWER(appointments.status) = ?"; $params[] = strtolower($_GET['status']); $types .= 's'; }
-if (!empty($_GET['from'])) { $baseQuery .= " AND DATE(appointments.appointment_date) >= ?"; $params[] = $_GET['from']; $types .= 's'; }
-if (!empty($_GET['to'])) { $baseQuery .= " AND DATE(appointments.appointment_date) <= ?"; $params[] = $_GET['to']; $types .= 's'; }
-$baseQuery .= " ORDER BY COALESCE(appointments.appointment_date, appointments.id) DESC";
-$stmt = $conn->prepare($baseQuery);
-@$stmt->bind_param($types, ...$params);
+          WHERE appointments.user_id = ?
+          ORDER BY COALESCE(appointments.appointment_date, appointments.id) DESC";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -40,69 +35,101 @@ if (!isset($_SESSION['csrf_token'])) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Roboto', sans-serif; background-color: #f6f9fc; display: flex; }
-        .main-content { margin-left: 260px; padding: 24px; width: calc(100% - 260px); min-height: 100vh; }
-        h2 { color: #0f172a; text-align: left; margin-bottom: 12px; }
-        .toast { background:#d1e7dd; color:#0f5132; padding:12px 14px; border-radius:10px; box-shadow:0 8px 24px rgba(2,32,71,.08); margin-bottom:12px; }
-        .toast.error { background:#f8d7da; color:#842029; }
-        .card { background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(2,32,71,.08); padding:16px; }
-        table { width: 100%; border-collapse: collapse; }
-        thead th { position: sticky; top: 0; background:#f8fafc; color:#334155; font-weight:600; padding:12px; border-bottom:1px solid #e5e7eb; }
-        tbody td { padding:12px; border-bottom:1px solid #eef2f7; color:#0f172a; }
-        tr:hover td { background:#fcfcfd; }
-        .action-link, .delete-link { color:#fff; text-decoration:none; cursor:pointer; padding:8px 12px; border-radius:8px; margin-right:6px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(13,110,253,.16); transition:transform .06s ease; }
-        .action-link { background:#0d6efd; }
-        .action-link:hover { background:#0b5ed7; transform: translateY(-1px); }
-        .delete-link { background:#dc3545; box-shadow:0 4px 14px rgba(220,53,69,.16); }
-        .delete-link:hover { background:#c9302c; transform: translateY(-1px); }
-        .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; }
-        .bg-pending { background:#fff3cd; color:#8a6d3b; }
-        .bg-approved { background:#d1e7dd; color:#0f5132; }
-        .bg-completed { background:#cfe2ff; color:#084298; }
-        .bg-rejected { background:#f8d7da; color:#842029; }
-        .filters label { color:#334155; font-size:12px; font-weight:600; }
-        .filters select, .filters input[type=date] { background:#fff; box-shadow:0 2px 8px rgba(2,32,71,.06); }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+        }
+        .main-content {
+            margin-left: 260px;
+            padding: 20px;
+            width: calc(100% - 260px);
+            min-height: 100vh;
+            background: white;
+        }
+        h2 { text-align: center; color: #333333; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #dddddd;
+            text-align: left;
+        }
+        th { background-color: #f4f4f9; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .success-message {
+            color: green;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .action-link, .delete-link {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        .action-link { background-color: #007bff; }
+        .action-link:hover { background-color: #0056b3; }
+        .delete-link { background-color: #d9534f; }
+        .delete-link:hover { background-color: #c9302c; }
+        .badge { display:inline-block; padding:4px 8px; border-radius:12px; font-size:12px; }
+        .bg-pending { background:#ffc107; color:#212529; }
+        .bg-approved { background:#28a745; color:#fff; }
+        .bg-completed { background:#0d6efd; color:#fff; }
+        .bg-rejected { background:#dc3545; color:#fff; }
         /* Modal styles */
-        .modal { display:none; position:fixed; z-index:10; inset:0; background-color: rgba(2,8,23,.55); justify-content:center; align-items:center; }
-        .modal-content { background:#fff; margin:auto; padding:20px; border: 1px solid #e2e8f0; width: 92%; max-width: 520px; border-radius:12px; text-align:left; box-shadow:0 12px 40px rgba(2,32,71,.18); }
-        .close { color:#94a3b8; float:right; font-size:28px; font-weight:bold; }
-        .close:hover, .close:focus { color:#0f172a; text-decoration:none; cursor:pointer; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <?php include 'guidance_admin_header.php'; ?>
     <div class="main-content">
         <h2>Guidance Requests</h2>
-        <form method="GET" class="filters" style="display:flex; gap:12px; align-items:end; margin:10px 0;">
-            <div>
-                <label>Status</label><br>
-                <select name="status" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;">
-                    <option value="">All</option>
-                    <option value="pending" <?= isset($_GET['status']) && $_GET['status']==='pending'?'selected':'' ?>>Pending</option>
-                    <option value="approved" <?= isset($_GET['status']) && $_GET['status']==='approved'?'selected':'' ?>>Approved</option>
-                    <option value="completed" <?= isset($_GET['status']) && $_GET['status']==='completed'?'selected':'' ?>>Completed</option>
-                    <option value="rejected" <?= isset($_GET['status']) && $_GET['status']==='rejected'?'selected':'' ?>>Rejected</option>
-                    <option value="cancelled" <?= isset($_GET['status']) && $_GET['status']==='cancelled'?'selected':'' ?>>Cancelled</option>
-                </select>
-            </div>
-            <div>
-                <label>Date From</label><br>
-                <input type="date" name="from" value="<?= htmlspecialchars($_GET['from'] ?? '') ?>" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;">
-            </div>
-            <div>
-                <label>Date To</label><br>
-                <input type="date" name="to" value="<?= htmlspecialchars($_GET['to'] ?? '') ?>" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;">
-            </div>
-            <div>
-                <button type="submit" style="background:#0d6efd; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer;">Filter</button>
-            </div>
-        </form>
-        <?php
-        $resReqs = [];
-        $conn->query("CREATE TABLE IF NOT EXISTS reschedule_requests (id INT AUTO_INCREMENT PRIMARY KEY, appointment_id INT NOT NULL, student_id VARCHAR(64) NOT NULL, requested_datetime DATETIME NOT NULL, note TEXT NULL, status VARCHAR(16) NOT NULL DEFAULT 'open', created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, INDEX(appointment_id), INDEX(status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-        $rr = $conn->query("SELECT appointment_id, requested_datetime, note FROM reschedule_requests WHERE status='open'");
-        if ($rr) { while($r=$rr->fetch_assoc()){ $resReqs[(int)$r['appointment_id']]=$r; } }
-        ?>
         <?php if (isset($_GET['success'])): ?>
             <p class="success-message"><?= htmlspecialchars($_GET['success']) ?></p>
         <?php endif; ?>
@@ -140,9 +167,6 @@ if (!isset($_SESSION['csrf_token'])) {
                             <td>
                                 <button class="action-link" onclick="openUpdateModal('<?= htmlspecialchars($row['id']) ?>', '<?= htmlspecialchars($row['status']) ?>')">Update</button>
                                 <button class="action-link" onclick="openScheduleModal('<?= htmlspecialchars($row['id']) ?>')">Schedule</button>
-                                <?php if (isset($resReqs[(int)$row['id']])): $rq=$resReqs[(int)$row['id']]; ?>
-                                <span class="badge bg-pending" title="Reschedule requested to <?= htmlspecialchars($rq['requested_datetime']) ?><?= $rq['note']?(' - '.htmlspecialchars($rq['note'])):'' ?>">Reschedule Req</span>
-                                <?php endif; ?>
                                 <?php if (strtolower($row['status']) === 'approved'): ?>
                                 <button class="action-link" style="background:#0d6efd" onclick="markCompleted('<?= htmlspecialchars($row['id']) ?>')">Complete</button>
                                 <?php endif; ?>
@@ -170,9 +194,7 @@ if (!isset($_SESSION['csrf_token'])) {
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="completed">Completed</option>
-                        <option value="no-show">No-show</option>
                         <option value="rejected">Rejected</option>
-                        <option value="cancelled">Cancelled</option>
                     </select>
                     <label for="admin_message">Admin Message:</label>
                     <textarea id="admin_message" name="admin_message"></textarea>
@@ -222,15 +244,6 @@ if (!isset($_SESSION['csrf_token'])) {
         }
         function openScheduleModal(request_id){
             document.getElementById('schedule_request_id').value = request_id;
-            try {
-                const res = <?= json_encode($resReqs) ?>;
-                if (res && res[request_id] && res[request_id].requested_datetime) {
-                    const input = document.querySelector('#scheduleForm input[name="datetime"]');
-                    const dt = new Date(res[request_id].requested_datetime.replace(' ', 'T'));
-                    dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
-                    input.value = dt.toISOString().slice(0,16);
-                }
-            } catch(e){}
             document.getElementById('scheduleModal').style.display = 'flex';
         }
         function submitSchedule(){

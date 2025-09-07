@@ -17,21 +17,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_request'])) {
     }
 
     $request_id = (int)($_POST['request_id'] ?? 0);
-    $acting_user_id = $_SESSION['user_id'];
-    $role = $_SESSION['role'] ?? '';
 
     if ($request_id > 0) {
-        // Ownership/permission check
-        $own = $conn->prepare("SELECT user_id FROM appointments WHERE id = ?");
-        $own->bind_param('i', $request_id);
-        $own->execute();
-        $ownerRow = $own->get_result()->fetch_assoc();
-        if (!$ownerRow) { echo 'Invalid data. Please try again.'; exit; }
-        if ($role !== 'Guidance Admin' && $ownerRow['user_id'] !== $acting_user_id) {
-            http_response_code(403);
-            exit('Forbidden');
-        }
-
         $deleteQuery = "DELETE FROM appointments WHERE id = ?";
         $stmt = $conn->prepare($deleteQuery);
         $stmt->bind_param("i", $request_id);
