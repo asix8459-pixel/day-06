@@ -137,8 +137,10 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 style="margin:0 0 8px; color:#fff;">Applications by Status</h5>
                     <div class="d-flex align-items-center gap-2">
-                        <label for="appsMonth" class="form-label mb-0" style="color:#cbd5e1; font-size:12px;">Month</label>
-                        <input type="month" id="appsMonth" class="form-control form-control-sm" style="border-radius:8px; background:rgba(255,255,255,.9);" value="<?= date('Y-m') ?>">
+                        <button id="appsPrev" type="button" class="btn btn-sm btn-light" title="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="appsMonthText" style="min-width:110px; text-align:center; color:#cbd5e1; font-weight:600;"><?= date('M Y') ?></span>
+                        <button id="appsNext" type="button" class="btn btn-sm btn-light" title="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                        <input type="month" id="appsMonth" class="form-control form-control-sm" style="position:absolute; left:-9999px; width:0; height:0; padding:0; border:0;" value="<?= date('Y-m') ?>">
                     </div>
                 </div>
                 <div class="chart-box"><canvas id="statusDonut"></canvas></div>
@@ -221,10 +223,44 @@ $verifiedThisMonth = (float)($conn->query("SELECT COALESCE(SUM(amount),0) AS s F
         const recentApps = document.getElementById('recentApps');
         const payMonth = document.getElementById('payMonth');
         const appsMonth = document.getElementById('appsMonth');
+        const appsPrev = document.getElementById('appsPrev');
+        const appsNext = document.getElementById('appsNext');
+        const appsMonthText = document.getElementById('appsMonthText');
+
+        function setAppsMonth(dateObj){
+            const y = dateObj.getFullYear();
+            const m = (dateObj.getMonth()+1).toString().padStart(2,'0');
+            appsMonth.value = `${y}-${m}`;
+            const label = dateObj.toLocaleDateString(undefined,{month:'short', year:'numeric'});
+            appsMonthText.textContent = label;
+        }
+        function getAppsMonthDate(){
+            const [y,m] = appsMonth.value.split('-').map(v=>parseInt(v,10));
+            return new Date(y, m-1, 1);
+        }
+        appsPrev.addEventListener('click', ()=>{
+            const d = getAppsMonthDate();
+            d.setMonth(d.getMonth()-1);
+            setAppsMonth(d);
+            refreshMetrics(appsMonth.value, payMonth.value);
+        });
+        appsNext.addEventListener('click', ()=>{
+            const d = getAppsMonthDate();
+            d.setMonth(d.getMonth()+1);
+            setAppsMonth(d);
+            refreshMetrics(appsMonth.value, payMonth.value);
+        });
+
+        // initial sync of label
+        setAppsMonth(getAppsMonthDate());
+
         refreshMetrics(appsMonth.value, payMonth.value);
         setInterval(()=>refreshMetrics(appsMonth.value, payMonth.value), 60000);
         payMonth.addEventListener('change', ()=> refreshMetrics(appsMonth.value, payMonth.value));
-        appsMonth.addEventListener('change', ()=> refreshMetrics(appsMonth.value, payMonth.value));
+        appsMonth.addEventListener('change', ()=> {
+            setAppsMonth(getAppsMonthDate());
+            refreshMetrics(appsMonth.value, payMonth.value)
+        });
     </script>
 </body>
 </html>
