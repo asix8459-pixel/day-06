@@ -244,7 +244,7 @@ $result = $conn->query($sql);
             </a>
             <div class="nav-links" role="navigation" aria-label="Primary">
                 <a href="#features">Features</a>
-                <a href="#rooms">Rooms</a>
+                <a href="#announcements">Announcements</a>
                 <a href="#how">How it works</a>
                 <a href="#testimonials">Testimonials</a>
                 <button id="modeToggle" class="mode-toggle" aria-label="Toggle dark mode"><i class="fa-regular fa-moon"></i></button>
@@ -287,28 +287,28 @@ $result = $conn->query($sql);
         </div>
     </section>
 
-    <!-- Rooms preview (carousel) -->
-    <section class="section" id="rooms">
+    <!-- Announcements preview (carousel) -->
+    <section class="section" id="announcements">
         <div class="container">
-            <h3 class="section-title">Dormitory Rooms</h3>
-            <p class="section-sub">Explore available rooms and apply quickly.</p>
+            <h3 class="section-title">Announcements</h3>
+            <p class="section-sub">Latest updates and news from NEUST Gabaldon.</p>
             <div class="splide reveal" aria-label="Rooms preview">
                 <div class="splide__track">
                     <ul class="splide__list">
-                        <?php mysqli_data_seek($result, 0); $i=0; while ($row = $result->fetch_assoc() && $i<6): $i++; ?>
+                        <?php mysqli_data_seek($result, 0); $i=0; while (($row = $result->fetch_assoc()) && $i < 6): $i++; ?>
                         <li class="splide__slide">
                             <div class="card room-card">
                                 <img src="uploads/announcements/<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['title']) ?>" loading="lazy" style="border-radius:12px; aspect-ratio:16/9; object-fit:cover; margin-bottom:8px;">
-                                <div class="room-chip"><i class="fa-solid fa-bed"></i> Featured</div>
-                                <h4 style="margin:8px 0 6px; font-weight:700;">Room highlight</h4>
-                                <p class="quote"><?= htmlspecialchars($row['title']) ?></p>
+                                <div class="room-chip"><i class="fa-solid fa-bullhorn"></i> Announcement</div>
+                                <h4 style="margin:8px 0 6px; font-weight:700;"><?= htmlspecialchars($row['title']) ?></h4>
+                                <p class="quote" style="margin-top:4px;">Posted: <?= htmlspecialchars(date('M d, Y', strtotime($row['date_posted'] ?? 'now'))) ?></p>
                             </div>
                         </li>
                         <?php endwhile; ?>
                     </ul>
                 </div>
             </div>
-            <div style="margin-top:12px"><a href="rooms.php" class="btn btn-primary"><i class="fa-solid fa-door-open"></i> Explore Rooms</a></div>
+            <div style="margin-top:12px"><a href="student_announcement.php" class="btn btn-primary"><i class="fa-solid fa-bullhorn"></i> View Announcements</a></div>
         </div>
     </section>
 
