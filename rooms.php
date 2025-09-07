@@ -60,6 +60,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['apply_room'])) {
 }
 $query = "SELECT * FROM rooms";
 $result = mysqli_query($conn, $query);
+
+// UI helpers
+function peso($v){ return '₱' . number_format((float)$v, 2); }
+$amenity_icons = [
+    'wifi' => '<i class="fas fa-wifi" aria-hidden="true"></i>',
+    'table' => '<i class="fas fa-table" aria-hidden="true"></i>',
+    'aircon' => '<i class="fas fa-wind" aria-hidden="true"></i>',
+    'ac' => '<i class="fas fa-wind" aria-hidden="true"></i>',
+    'fan' => '<i class="fas fa-fan" aria-hidden="true"></i>',
+    'tv' => '<i class="fas fa-tv" aria-hidden="true"></i>',
+    'shower' => '<i class="fas fa-shower" aria-hidden="true"></i>',
+    'locker' => '<i class="fas fa-lock" aria-hidden="true"></i>',
+    'bed' => '<i class="fas fa-bed" aria-hidden="true"></i>',
+    'lamp' => '<i class="fas fa-lightbulb" aria-hidden="true"></i>',
+    'kitchen' => '<i class="fas fa-utensils" aria-hidden="true"></i>',
+    'bathroom' => '<i class="fas fa-bath" aria-hidden="true"></i>',
+    'window' => '<i class="fas fa-window-maximize" aria-hidden="true"></i>',
+    'parking' => '<i class="fas fa-parking" aria-hidden="true"></i>',
+    'balcony' => '<i class="fas fa-tree" aria-hidden="true"></i>',
+];
+function norm_amenity($raw){
+    $r = strtolower(trim($raw));
+    return match($r){ 'air-con','air con','a/c' => 'aircon', 'desk' => 'table', 'bath','cr','toilet' => 'bathroom', default => $r };
+}
+function render_amenities($amenities, $icons){
+    if (!$amenities) return '<span class="text-muted">No amenities listed</span>';
+    $out = '';
+    foreach (preg_split('/[\s,;]+/', strtolower(trim($amenities))) as $raw){
+        if (!$raw) continue;
+        $key = norm_amenity($raw);
+        $label = ucfirst($key);
+        $icon = $icons[$key] ?? '<i class="fas fa-circle-dot" aria-hidden="true"></i>';
+        $out .= '<span class="amenity-pill" title="'.$label.'" aria-label="'.$label.'">'.$icon.' '.$label.'</span>';
+    }
+    return $out ?: '<span class="text-muted">No amenities listed</span>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,58 +105,85 @@ $result = mysqli_query($conn, $query);
     <title>Available Rooms</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .room-card { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
-        .room-card:hover { transform: scale(1.05); box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2); }
-        .room-img { width: 100%; height: 200px; object-fit: cover; border-top-left-radius: 10px; border-top-right-radius: 10px; }
-        .modal-header { background-color: #003366; color: white; border-bottom: none; }
-        .btn-primary, .btn-secondary { background-color: #003366; color: white; }
-        .modal-centered { display: flex; align-items: center; justify-content: center; }
-        .modal-content { border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-        .modal-body.success { background-color: #d4edda; color: #155724; }
-        .modal-body.error { background-color: #f8d7da; color: #721c24; }
-        .modal-body .icon { font-size: 4rem; margin-bottom: 1rem; }
-        .modal-body.success .icon { color: #155724; }
-        .modal-body.error .icon { color: #721c24; }
-        .room-name { font-weight: bold; text-align: left; margin-bottom: 10px; margin-left: 100px; }
-        .modal.fade .modal-dialog {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+        :root {
+            --primary: #003366;
+            --accent: #F7C873;
+            --glass: rgba(255,255,255,.82);
+            --ink: #0f172a;
         }
-        .modal-body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        body { background: linear-gradient(135deg, #e7efff 0%, #f4f8fc 100%); font-family: 'Inter','Segoe UI','Roboto',Arial,sans-serif; }
+        .grid { column-count: 3; column-gap: 2.2rem; }
+        @media (max-width: 1100px){ .grid { column-count: 2; } }
+        @media (max-width: 700px){ .grid { column-count: 1; } }
+        .card.room-card {
+            display: inline-block; width: 100%; margin-bottom: 2.2rem;
+            background: var(--glass); border:1px solid rgba(0,0,0,.04);
+            border-radius: 18px; box-shadow: 0 14px 44px rgba(2,32,71,.12);
+            overflow:hidden; break-inside: avoid; transition: transform .35s, box-shadow .35s;
+            opacity:0; animation: fadeUp .7s cubic-bezier(.19,1,.22,1) forwards;
         }
+        @keyframes fadeUp { from{ transform: translateY(36px); opacity:0 } to{ transform:none; opacity:1 } }
+        .card.room-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 22px 66px rgba(2,32,71,.18); }
+        .room-img { width:100%; height: 220px; object-fit: cover; }
+        .price-chip, .status-chip { position:absolute; top:14px; z-index:2; padding:.42rem 1rem; border-radius: 999px; font-weight:800; box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+        .price-chip { right:16px; background: var(--accent); color:#5c4a00; }
+        .status-chip { left:16px; background:#fff; color:#12b886; border:1px solid #12b886; }
+        .status-chip.full { color:#e03131; border-color:#e03131; }
+        .amenity-pill { background:#f3f6ff; color:var(--primary); border-radius: 999px; padding:.38rem .8rem; display:inline-flex; gap:.4rem; align-items:center; font-weight:700; box-shadow:0 2px 10px #f7c87331; margin:.15rem; transition: transform .16s, background .16s; }
+        .amenity-pill:hover { transform: scale(1.04); background:var(--accent); color:#fff; }
+        .btn-view { background:#fff; color:var(--primary); font-weight:800; border:2px solid var(--primary); border-radius:12px; padding:.6rem 1rem; }
+        .btn-view:hover { background:var(--primary); color:#fff; border-color:var(--accent); }
+        .btn-apply { background:var(--primary); color:#fff; font-weight:800; border-radius:12px; padding:.6rem 1rem; }
+        .btn-apply:disabled { background:#bbb; cursor:not-allowed; }
+        .modal-header { background:var(--primary); color:#fff; border-top-left-radius:16px; border-top-right-radius:16px; }
+        .modal-content { border-radius:16px; box-shadow:0 16px 44px rgba(2,32,71,.18); }
     </style>
     <title>Apply for Dormitory Room</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="assets/student_theme.css">
 </head>
 <body>
-    <?php include 'student_header.php'; // Include the header file ?>
-<?php include('student_header.php'); ?>
+    <?php include 'student_header.php'; ?>
     <div class="container mt-4">
-        <h2 class="text-center mb-4">Available Rooms</h2>
-        <div class="row">
-            <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-lg room-card">
-                        <img src="<?= htmlspecialchars($row['image']) ?>" class="room-img" alt="Room Image">
-                        <div class="card-body">
-                            <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
-                            <p>Total Beds: <?= htmlspecialchars($row['total_beds']) ?></p>
-                            <p>Occupied Beds: <?= htmlspecialchars($row['occupied_beds']) ?></p>
-                            <p>Available Beds: <?= htmlspecialchars($row['total_beds'] - $row['occupied_beds']) ?></p>
-                            <p>Price per Month: ₱<?= htmlspecialchars($row['price_per_month']) ?></p>
-                            <button class="btn btn-info w-100 view-details-btn" data-room-id="<?= $row['id'] ?>" data-room-name="<?= htmlspecialchars($row['name']) ?>" data-total-beds="<?= htmlspecialchars($row['total_beds']) ?>" data-occupied-beds="<?= htmlspecialchars($row['occupied_beds']) ?>" data-image="<?= htmlspecialchars($row['image']) ?>" data-amenities="<?= htmlspecialchars($row['amenities'] ?? 'Not specified') ?>" data-price="<?= htmlspecialchars($row['price_per_month']) ?>">View Details</button>
-                            <button class="btn btn-success w-100 apply-room-btn mt-2" data-room-id="<?= $row['id'] ?>">Apply for Room</button>
-                        </div>
+        <h2 class="text-center mb-4" style="color:var(--primary); font-weight:900; letter-spacing:.4px;">Premium Dorm Rooms</h2>
+        <div class="grid">
+            <?php while ($row = mysqli_fetch_assoc($result)): 
+                $available = max(0, (int)$row['total_beds'] - (int)$row['occupied_beds']);
+                $isAvail = $available > 0;
+                $statusClass = $isAvail ? 'status-chip' : 'status-chip full';
+            ?>
+            <div class="card room-card">
+                <div style="position:relative;">
+                    <img src="<?= htmlspecialchars($row['image']) ?>" class="room-img" alt="Room image: <?= htmlspecialchars($row['name']) ?>" loading="lazy" width="1024" height="680">
+                    <span class="price-chip"><?= peso($row['price_per_month']) ?>/month</span>
+                    <span class="<?= $statusClass ?>"><?= $isAvail ? '✅ Available' : '❌ Full' ?></span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title" style="font-weight:900;color:var(--ink)"><?= htmlspecialchars($row['name']) ?></h5>
+                    <div class="d-flex align-items-center gap-3 mb-2" role="list">
+                        <span class="text-primary" aria-hidden="true"><i class="fas fa-bed"></i></span>
+                        <span role="listitem"><?= (int)$row['total_beds'] ?> Beds</span>
+                        <span class="text-primary" aria-hidden="true"><i class="fas fa-user-check"></i></span>
+                        <span role="listitem"><?= $available ?> Available</span>
+                    </div>
+                    <div class="amenities-list">
+                        <?= render_amenities($row['amenities'] ?? '', $amenity_icons) ?>
+                    </div>
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn-view flex-fill view-details-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#roomDetailsModal"
+                                data-room-name="<?= htmlspecialchars($row['name']) ?>"
+                                data-image="<?= htmlspecialchars($row['image']) ?>"
+                                data-total-beds="<?= (int)$row['total_beds'] ?>"
+                                data-occupied-beds="<?= (int)$row['occupied_beds'] ?>"
+                                data-price="<?= peso($row['price_per_month']) ?>"
+                                data-amenities="<?= htmlspecialchars($row['amenities'] ?? '') ?>"
+                        >View Details</button>
+                        <button class="btn-apply flex-fill apply-room-btn" <?= $isAvail ? '' : 'disabled' ?> data-room-id="<?= (int)$row['id'] ?>">Apply</button>
                     </div>
                 </div>
+            </div>
             <?php endwhile; ?>
         </div>
     </div>
@@ -136,7 +199,7 @@ $result = mysqli_query($conn, $query);
                     <h5 id="roomName" class="room-name"></h5>
                     <div class="row">
                         <div class="col-md-6">
-                            <img src="" class="img-fluid mb-3" id="roomImage" alt="Room Image">
+                            <img src="" class="img-fluid mb-3" id="roomImage" alt="Room Image" style="border-radius:12px; box-shadow:0 10px 30px rgba(2,32,71,.18);">
                         </div>
                         <div class="col-md-6">
                             <p>Total Beds: <span id="totalBeds"></span></p>
@@ -224,13 +287,14 @@ $result = mysqli_query($conn, $query);
             }
             document.querySelectorAll(".view-details-btn").forEach(button => {
                 button.addEventListener("click", function() {
-                    document.getElementById("roomImage").src = this.getAttribute("data-image");
-                    document.getElementById("roomName").textContent = this.getAttribute("data-room-name");
-                    document.getElementById("totalBeds").textContent = this.getAttribute("data-total-beds");
-                    document.getElementById("occupiedBeds").textContent = this.getAttribute("data-occupied-beds");
-                    document.getElementById("availableBeds").textContent = this.getAttribute("data-total-beds") - this.getAttribute("data-occupied-beds");
-                    document.getElementById("price").textContent = this.getAttribute("data-price");
-                    document.getElementById("amenities").textContent = this.getAttribute("data-amenities");
+                    document.getElementById("roomImage").src = this.dataset.image;
+                    document.getElementById("roomName").textContent = this.dataset.roomName;
+                    document.getElementById("totalBeds").textContent = this.dataset.totalBeds;
+                    document.getElementById("occupiedBeds").textContent = this.dataset.occupiedBeds;
+                    document.getElementById("availableBeds").textContent = this.dataset.totalBeds - this.dataset.occupiedBeds;
+                    document.getElementById("price").textContent = this.dataset.price;
+                    const amenities = this.dataset.amenities || '';
+                    document.getElementById("amenities").textContent = amenities || 'No amenities listed';
                     roomDetailsModal.show();
                 });
             });
