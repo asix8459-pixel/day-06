@@ -1,0 +1,38 @@
+/* Guidance shared modern theme */
+:root {
+  --bg: #f6f9fc;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --brand: #0d6efd;
+  --brand-2: #12b886;
+  --warn: #f59f00;
+  --danger: #dc3545;
+  --ring: 0 0 0 3px rgba(13,110,253,.15);
+  --shadow-1: 0 10px 30px rgba(2,32,71,.1);
+  --shadow-2: 0 12px 40px rgba(2,32,71,.12);
+}
+
+body.guidance-theme { background: var(--bg); }
+.g-card { background: var(--card); border-radius: 14px; box-shadow: var(--shadow-2); padding: 16px; }
+.g-hero { background: linear-gradient(135deg, #003366 0%, #0b5ed7 100%); color:#fff; border-radius:16px; padding:24px; box-shadow:0 16px 40px rgba(2,32,71,.25); }
+.g-hero h2 { margin:0 0 8px; font-weight:800; letter-spacing:.3px; }
+.g-hero p { margin:0; opacity:.92; }
+.g-btn { display:inline-flex; align-items:center; gap:8px; padding: 10px 14px; border-radius:12px; border:none; color:#fff; background:var(--brand); cursor:pointer; box-shadow:0 8px 24px rgba(13,110,253,.22); text-decoration:none; }
+.g-btn:hover { filter:brightness(0.95); transform: translateY(-1px); transition: all .12s ease; }
+.g-input { padding:10px 12px; border:1px solid #e5e7eb; border-radius:12px; background:#fff; box-shadow:0 2px 8px rgba(2,32,71,.06); }
+.g-input:focus { outline:none; box-shadow: var(--ring); border-color: var(--brand); }
+.g-badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+.g-badge.pending { background:#fff3cd; color:#8a6d3b; }
+.g-badge.approved { background:#d1e7dd; color:#0f5132; }
+.g-badge.completed { background:#cfe2ff; color:#084298; }
+.g-badge.rejected { background:#f8d7da; color:#842029; }
+.g-toast { background:#d1e7dd; color:#0f5132; padding:12px 14px; border-radius:10px; box-shadow:0 8px 24px rgba(2,32,71,.08); }
+.g-toast.error { background:#f8d7da; color:#842029; }
+.g-table thead th { position:sticky; top:0; background:#f8fafc; color:#334155; font-weight:600; padding:12px; border-bottom:1px solid #e5e7eb; }
+.g-table tbody td { padding:12px; border-bottom:1px solid #eef2f7; color:#0f172a; }
+.fade-in { animation:fade-in .24s ease both; }
+.hover-rise { transition: transform .12s ease, filter .12s ease; }
+.hover-rise:hover { transform: translateY(-2px); filter: brightness(0.98); }
+@keyframes fade-in { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform:none; } }
+

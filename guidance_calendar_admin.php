@@ -138,7 +138,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const calEl = document.getElementById('calendar');
     cal=new FullCalendar.Calendar(calEl,{
       initialView:'timeGridWeek', editable:true, eventOverlap:false, height:'auto',
+      slotMinTime: '08:00:00', slotMaxTime: '17:00:00',
+      businessHours: { daysOfWeek:[1,2,3,4,5], startTime:'08:00', endTime:'17:00' },
+      nowIndicator:true,
       events:'guidance_calendar_admin_events.php',
+      eventConstraint: 'businessHours',
       eventDrop:(info)=>update(info), eventResize:(info)=>update(info)
     });
     function update(info){
@@ -151,6 +155,14 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch (e) {
     console.warn('Calendar failed to initialize:', e);
   }
+
+  // Auto-open modal if ?new=1
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('new') === '1') {
+      setTimeout(()=> modal.show(), 100);
+    }
+  } catch(_){}
 });
 </script>
 </body>

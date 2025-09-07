@@ -1,5 +1,6 @@
 <?php 
 session_start(); // Start the session
+require_once __DIR__ . '/csrf.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -21,6 +22,9 @@ if ($conn->connect_error) {
 $errorMessage = ""; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!csrf_validate($_POST['csrf_token'] ?? null)) {
+        $errorMessage = "Invalid request. Please refresh and try again.";
+    } else {
     $userId = trim($_POST['user_id']);
     $password = $_POST['password'];
     $rememberMe = isset($_POST['remember_me']);
@@ -82,6 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errorMessage = "User ID does not exist.";
     }
     $stmt->close();
+    }
 }
 ?>
 
@@ -101,6 +106,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             --text-color: #1a1a1a;
             --light-text-color: #ffffff;
             --error-color: #e63946;
+            --glass-bg: rgba(255,255,255,.78);
+            --glass-border: rgba(255,255,255,.45);
+            --shadow: 0 20px 60px rgba(0,0,0,.25);
         }
 
         * {
@@ -115,49 +123,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: url('assets/neust.jpg') no-repeat center center/cover;
-            transition: background 0.3s ease-in-out;
+            background: linear-gradient(135deg, #001934 0%, #012a52 40%, #023b70 100%);
+            overflow: hidden;
             color: var(--text-color);
         }
 
+        /* Animated background */
+        .bg-anim { position: absolute; inset: -20% -10% -10% -10%; background: radial-gradient(600px 300px at 10% 10%, rgba(14,165,233,.25), transparent 60%), radial-gradient(600px 300px at 90% 80%, rgba(34,197,94,.22), transparent 60%), radial-gradient(500px 250px at 40% 20%, rgba(245,158,11,.18), transparent 60%); filter: blur(12px); animation: hue 16s linear infinite; }
+        @keyframes hue { 0%{ filter: blur(12px) hue-rotate(0deg);} 100%{ filter: blur(12px) hue-rotate(360deg);} }
+
         .container {
             width: 400px;
-            background: rgba(255, 255, 255, 0.7);
+            background: var(--glass-bg);
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
             text-align: center;
             transition: all 0.3s;
+            transform: translateY(10px);
+            opacity: 0;
+            animation: fadeSlide .45s ease forwards;
         }
+
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .container:hover {
             transform: scale(1.02);
         }
 
-        .icon {
-            font-size: 60px;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
+        .icon { font-size: 60px; color: var(--primary-color); margin-bottom: 12px; }
 
-        .input-group {
-            position: relative;
-            width: 100%;
-        }
+        /* Floating labels */
+        .fl-group { position: relative; margin: 12px 0; }
+        .fl-group input { width: 100%; padding: 14px 12px; border: 1px solid #cfd8dc; border-radius: 10px; font-size: 16px; background: rgba(255,255,255,.9); transition: border .2s, box-shadow .2s; }
+        .fl-group input:focus { border-color: var(--primary-color); outline: 0; box-shadow: 0 0 0 4px rgba(0,119,182,.12); }
+        .fl-group label { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; background: transparent; padding: 0 6px; transition: .18s ease; pointer-events: none; }
+        .fl-group input::placeholder { color: transparent; }
+        .fl-group input:focus + label,
+        .fl-group input:not(:placeholder-shown) + label { top: -8px; transform: none; font-size: 12px; background: var(--glass-bg); border-radius: 6px; }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        input:focus {
-            border-color: var(--primary-color);
-            outline: none;
-        }
+        .hint { text-align: left; font-size: 12px; color: #6b7280; margin-top: -6px; }
 
         .toggle-password {
             position: absolute;
@@ -172,11 +178,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: var(--primary-color);
         }
 
-        .error {
-            color: var(--error-color);
-            font-size: 14px;
-            margin-top: 10px;
-        }
+        .toast-error { background: #fee2e2; color: #7f1d1d; border: 1px solid #fecaca; padding: 10px 12px; border-radius: 10px; margin: 8px 0 4px; text-align: left; animation: pop .2s ease; }
+        @keyframes pop { from { transform: scale(.98); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         .remember-me {
             display: flex;
@@ -194,41 +197,62 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding: 12px;
             margin-top: 20px;
             border: none;
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
             color: var(--light-text-color);
             font-size: 16px;
             cursor: pointer;
             border-radius: 8px;
-            transition: background 0.3s;
+            transition: transform .15s ease, filter .2s ease;
         }
 
         button:hover {
-            background: var(--secondary-color);
+            filter: brightness(1.05);
+            transform: translateY(-1px);
         }
+
+        .spinner {
+            width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.6); border-top-color: #fff; border-radius: 50%; display: inline-block; margin-right: 8px; animation: spin .8s linear infinite; vertical-align: -2px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <div class="bg-anim" aria-hidden="true"></div>
     <div class="container">
         <i class="fas fa-user-circle icon"></i>
         <h2>Login</h2>
-        <form method="POST" action="">
-            <div class="input-group">
-                <input type="text" name="user_id" placeholder="User ID" value="<?php echo isset($_COOKIE['user_id']) ? $_COOKIE['user_id'] : ''; ?>" required>
+        <?php if (!empty($errorMessage)) { ?>
+            <div class="toast-error"><?= htmlspecialchars($errorMessage) ?></div>
+        <?php } ?>
+        <form method="POST" action="" id="loginForm">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES) ?>">
+            <div class="fl-group">
+                <input type="text" name="user_id" id="user_id" placeholder=" " value="<?php echo isset($_COOKIE['user_id']) ? $_COOKIE['user_id'] : ''; ?>" required>
+                <label for="user_id">User ID</label>
             </div>
-            <div class="input-group">
-                <input type="password" id="password" name="password" placeholder="Password" required>
+            <div class="fl-group" style="position:relative;">
+                <input type="password" id="password" name="password" placeholder=" " required>
+                <label for="password">Password</label>
                 <i class="fas fa-eye toggle-password" id="togglePassword"></i>
             </div>
             <div class="remember-me">
                 <input type="checkbox" name="remember_me" id="remember_me">
                 <label for="remember_me">Remember Me</label>
             </div>
-            <span class="error"><?php echo $errorMessage; ?></span>
-            <button type="submit">Login</button>
+            <button type="submit" id="loginBtn">Login</button>
         </form>
-        <p>Don't have an account? <a href="register.php">Register here</a></p>
+        <div style="margin-top:10px; display:flex; justify-content: space-between; align-items:center;">
+            <a href="register.php">Create account</a>
+            <a href="reset_password.php">Forgot password?</a>
+        </div>
     </div>
     <script>
+        // Loading state on submit
+        document.getElementById('loginForm').addEventListener('submit', function(){
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Signing in...';
+        });
         document.getElementById("togglePassword").addEventListener("click", function () {
             let passwordInput = document.getElementById("password");
             this.classList.toggle("fa-eye-slash");

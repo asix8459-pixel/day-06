@@ -13,13 +13,13 @@
         <aside class="sidebar">
             <div class="logo">NEUST Gabaldon</div>
             <ul class="nav-links">
-                <li><a href="admin_dashboard" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="admin_dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
                 <li><a href="power_admin_announcement.php"><i class="fas fa-bullhorn"></i> Announcements</a></li>
                 <li><a href="power_admin_users.php"><i class="fas fa-users"></i> Users</a></li>
-                <li><a href="#.php"><i class="fas fa-exclamation-triangle"></i> Grievances</a></li>
+                <li><a href="power_admin_manage_grievances.php"><i class="fas fa-exclamation-triangle"></i> Grievances</a></li>
                
-                <li><a href="manage_admin.php"><i class="fas fa-user-shield"></i> Manage Admin</a></li>
-                <li><a href="logout.php">Logout</a></li>
+                <li><a href="admin_list.php"><i class="fas fa-user-shield"></i> Manage Admin</a></li>
+                <li><a href="login.php">Logout</a></li>
             </ul>
         </aside>
         
